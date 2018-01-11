@@ -27,23 +27,32 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 
 public class Robot extends IterativeRobot {
+	
 	float lerpSpeed = 0.2f;
 	public JoshMotorControllor leftMotorTop= new JoshMotorControllor(12, lerpSpeed, false);
 	public JoshMotorControllor leftMotorBottom = new JoshMotorControllor(9, lerpSpeed, false);
 	public JoshMotorControllor rightMotorTop= new JoshMotorControllor(15, lerpSpeed, false);
-	public JoshMotorControllor rightMotorBottom;
-	public JoshMotorControllor climber= new JoshMotorControllor(7, lerpSpeed,false);
-
+	public JoshMotorControllor rightMotorBottom = new JoshMotorControllor(7, lerpSpeed,false);;
+	public JoshMotorControllor climber = new JoshMotorControllor(7, lerpSpeed,false);
+	
 	public Joystick xbox360Controller;
 	public Joystick xboxController;
+	
 	public void autonomousInit() {
 
 	}
+	
 	public void autonomousPeriodic() {
 
 	}
 
 	public void teleopInit() {
+		
+		
+		xbox360Controller = new Joystick(0);
+		xboxController = new Joystick(1);
+		
+		
 		float lerpSpeed = 0.5f;
 		leftMotorTop.accelValue = lerpSpeed;
 		leftMotorBottom.accelValue = lerpSpeed;
