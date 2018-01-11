@@ -33,14 +33,42 @@ public class Robot extends IterativeRobot {
 	public JoshMotorControllor rightMotorTop= new JoshMotorControllor(15, lerpSpeed, false);
 	public JoshMotorControllor rightMotorBottom;
 	public JoshMotorControllor climber= new JoshMotorControllor(7, lerpSpeed,false);
-	
 
+	public Joystick xbox360Controller;
+	public Joystick xboxController;
+	public void autonomousInit() {
+
+	}
 	public void autonomousPeriodic() {
 
 	}
 
+	public void teleopInit() {
+		float lerpSpeed = 0.5f;
+		leftMotorTop.accelValue = lerpSpeed;
+		leftMotorBottom.accelValue = lerpSpeed;
+		rightMotorTop.accelValue = lerpSpeed;
+		rightMotorBottom.accelValue = lerpSpeed;	
+	}
 	public void teleopPeriodic() {
+		UpdateMotors();
+		{
+			float horJoystick = 0;
+			float verJoystick = 0;
 
+			float epsilon = 0.2f;
+			float leftInput = TranslateController((float)xbox360Controller.getRawAxis(0));
+			if (leftInput > epsilon || leftInput < -epsilon) {
+				horJoystick = leftInput;
+			}
+			float rightInput = TranslateController((float)xbox360Controller.getRawAxis(5));
+			if (rightInput > epsilon || rightInput < -epsilon) {
+				verJoystick = rightInput;
+			}
+
+			SetLeftMotors(verJoystick + horJoystick);
+			SetRightMotors(-verJoystick + horJoystick);
+		}
 	}
 
 	public void testPeriodic() {
@@ -61,6 +89,15 @@ public class Robot extends IterativeRobot {
 		rightMotorTop.UpdateMotor();
 		rightMotorBottom.UpdateMotor();
 
+	}
+	public float TranslateController(float input) {
+		float deadzone = 0.15f;
+		if (input > -deadzone && input < deadzone) {
+			input = 0.0f;
+		}
+		float a = 0.7f;
+		float output = (a * input * input * input) + (1 - a) * input; 
+		return output;
 	}
 }
 
