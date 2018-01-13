@@ -1,10 +1,16 @@
 package org.usfirst.frc.team2990.robot;
+
+
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Victor;
 import edu.wpi.first.wpilibj.VictorSP;
+import com.ctre.phoenix.motorcontrol.*;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+
 public class JoshMotorControllor {
+	
 	public VictorSP victor; 
-	public Talon talon;
+	public TalonSRX talon;
 	public float accelValue;
 	public float target;
 	public boolean usingVictor;
@@ -15,7 +21,7 @@ public class JoshMotorControllor {
 		if (usingVictor) {
 			victor = new VictorSP(motorpwm);
 		} else {
-			talon = new Talon(motorpwm);
+			talon = new TalonSRX(motorpwm);
 		}
 		
 		accelValue = AcelerationMax;
@@ -28,7 +34,7 @@ public class JoshMotorControllor {
 			if(usingVictor) {
 				curr = victor.get();
 			} else {	
-				curr = talon.get();
+				curr = talon.getMotorOutputPercent();
 			}
 			
 			float newValue = Lerp((float)curr,target,accelValue);
@@ -42,7 +48,7 @@ public class JoshMotorControllor {
 			if (usingVictor) {
 				victor.set(newValue);
 			} else {
-				talon.set(newValue);
+				talon.set(ControlMode.PercentOutput, newValue);
 			}
 		}
 	}
@@ -52,4 +58,10 @@ public class JoshMotorControllor {
 		return (v0 + t*(v1-v0));
 	}
 	
+	public void SetBrake(){
+		//talon.enableBrakeMode(true);
+	}
+	public void SetCoast(){
+		//talon.enableBrakeMode(false);
+	}
 }

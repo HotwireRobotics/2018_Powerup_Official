@@ -29,11 +29,13 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class Robot extends IterativeRobot {
 	
 	float lerpSpeed = 0.2f;
-	public JoshMotorControllor leftMotorTop= new JoshMotorControllor(12, lerpSpeed, false);
-	public JoshMotorControllor leftMotorBottom = new JoshMotorControllor(9, lerpSpeed, false);
-	public JoshMotorControllor rightMotorTop= new JoshMotorControllor(15, lerpSpeed, false);
-	public JoshMotorControllor rightMotorBottom;
-	public JoshMotorControllor climber = new JoshMotorControllor(7, lerpSpeed,false);
+	public JoshMotorControllor leftMotorTop= new JoshMotorControllor(1, lerpSpeed, false);
+	public JoshMotorControllor leftMotorBottom1 = new JoshMotorControllor(2, lerpSpeed, false);
+	public JoshMotorControllor leftMotorBottom2 = new JoshMotorControllor(4, lerpSpeed, false);
+	public JoshMotorControllor rightMotorTop= new JoshMotorControllor(3, lerpSpeed, false);
+	public JoshMotorControllor rightMotorBottom1 = new JoshMotorControllor(5, lerpSpeed, false);
+	public JoshMotorControllor rightMotorBottom2 = new JoshMotorControllor(6, lerpSpeed, false);
+	//public JoshMotorControllor climber = new JoshMotorControllor(7, lerpSpeed,false);
 	
 	public Joystick xbox360Controller;
 	public Joystick xboxController;
@@ -43,7 +45,7 @@ public class Robot extends IterativeRobot {
 	}
 	
 	public void autonomousPeriodic() {
-
+		SetRightMotors(.2f);
 	}
 
 	public void teleopInit() {
@@ -55,9 +57,11 @@ public class Robot extends IterativeRobot {
 		
 		float lerpSpeed = 0.5f;
 		leftMotorTop.accelValue = lerpSpeed;
-		leftMotorBottom.accelValue = lerpSpeed;
+		leftMotorBottom1.accelValue = lerpSpeed;
+		leftMotorBottom2.accelValue = lerpSpeed;
 		rightMotorTop.accelValue = lerpSpeed;
-		rightMotorBottom.accelValue = lerpSpeed;	
+		rightMotorBottom1.accelValue = lerpSpeed;	
+		rightMotorBottom2.accelValue = lerpSpeed;	
 	}
 	public void teleopPeriodic() {
 		UpdateMotors();
@@ -84,19 +88,23 @@ public class Robot extends IterativeRobot {
 	}
 	public void SetLeftMotors(float speed){
 		leftMotorTop.target = -speed;
-		leftMotorBottom.target = speed;
+		leftMotorBottom1.target = speed;
+		leftMotorBottom2.target = speed;
 	}
 
 	public void SetRightMotors(float speed) {
 		rightMotorTop.target = -speed;
-		rightMotorBottom.target = speed;
+		rightMotorBottom1.target = speed;
+		rightMotorBottom2.target = speed;
 	}
 
 	public void UpdateMotors() {
 		leftMotorTop.UpdateMotor();
-		leftMotorBottom.UpdateMotor();
+		leftMotorBottom1.UpdateMotor();
+		leftMotorBottom2.UpdateMotor();
 		rightMotorTop.UpdateMotor();
-		rightMotorBottom.UpdateMotor();
+		rightMotorBottom1.UpdateMotor();
+		rightMotorBottom2.UpdateMotor();
 
 	}
 	public float TranslateController(float input) {
