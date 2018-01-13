@@ -36,6 +36,14 @@ public class DriveTrain {
 		joshmotorcontrollorRightBottomOne.target = Speed;
 		joshmotorcontrollorRightBottomTwo.target = Speed;
 	}
+	public void SetBothSpeed(float Speed){
+		joshmotorcontrollorLeftTop.target = -Speed;
+		joshmotorcontrollorLeftBottomOne.target = Speed;
+		joshmotorcontrollorLeftBottomTwo.target = Speed;
+		joshmotorcontrollorRightTop.target = -Speed;
+		joshmotorcontrollorRightBottomOne.target = Speed;
+		joshmotorcontrollorRightBottomTwo.target = Speed;
+	}
 	public void SetBreak(){
 		joshmotorcontrollorRightTop.SetBrake();
 		joshmotorcontrollorRightBottomOne.SetBrake();
@@ -51,5 +59,7 @@ public class DriveTrain {
 		joshmotorcontrollorLeftTop.SetCoast();
 		joshmotorcontrollorLeftBottomOne.SetCoast();
 		joshmotorcontrollorLeftBottomTwo.SetCoast();
+		// TODO Auto-generated method stub
+
 	}
 }

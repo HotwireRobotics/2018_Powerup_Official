@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj.Victor;
 import edu.wpi.first.wpilibj.VictorSP;
 import com.ctre.phoenix.motorcontrol.*;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
 public class JoshMotorControllor {
 	
@@ -21,7 +22,7 @@ public class JoshMotorControllor {
 		if (usingVictor) {
 			victor = new VictorSP(motorpwm);
 		} else {
-			talon = new TalonSRX(motorpwm);
+			talon = new WPI_TalonSRX(motorpwm);
 		}
 		
 		accelValue = AcelerationMax;
