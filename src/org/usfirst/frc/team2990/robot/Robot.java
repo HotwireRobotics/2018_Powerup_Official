@@ -37,8 +37,16 @@ public class Robot extends IterativeRobot {
 	public DoubleSolenoid driveShifter = new DoubleSolenoid(0,1);
 	public Joystick xbox360Controller;
 	public Joystick xboxController;
+	public Ultrasonic ultrasonic = new Ultrasonic(5, 6);
+	public Encoder encoder;
+	public AHRS navx = new AHRS(SPI.Port.kMXP);
 
-
+	public void robotInit()
+	{
+		encoder = new Encoder(2, 3);
+		encoder.reset();
+	}
+	
 	public void autonomousInit() {
 		driveShifter.set(DoubleSolenoid.Value.kReverse);
 	}
@@ -51,7 +59,8 @@ public class Robot extends IterativeRobot {
 	}
 
 	public void teleopInit() {
-
+	
+		ultrasonic.setAutomaticMode(true);
 
 		xbox360Controller = new Joystick(0);
 		xboxController = new Joystick(1);
@@ -61,7 +70,12 @@ public class Robot extends IterativeRobot {
 		drivetrain.SetLeftSpeed(lerpSpeed);
 		drivetrain.SetRightSpeed(lerpSpeed);
 	}
+	
 	public void teleopPeriodic() {
+		System.out.println("Encoder: " + encoder.get());
+		
+		//System.out.println("Ultrasonic: " + ultrasonic.getRangeInches());
+		//sSystem.out.println("Navx: " + navx.getYaw());
 		
 		UpdateMotors();
 		{
@@ -70,8 +84,6 @@ public class Robot extends IterativeRobot {
 
 			drivetrain.SetRightSpeed(verJoystick + horJoystick);
 			drivetrain.SetLeftSpeed(-verJoystick + horJoystick);
-			System.out.println("horizontal" + horJoystick);
-			System.out.println("vertical" + verJoystick);
 		}
 	}
 
