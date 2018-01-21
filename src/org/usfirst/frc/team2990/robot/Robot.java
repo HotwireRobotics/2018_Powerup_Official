@@ -20,6 +20,8 @@ import edu.wpi.first.wpilibj.Relay;
 import org.usfirst.frc.team2990.robot.DriveTrain;
 
 import com.ctre.CANTalon;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.CameraServer;
@@ -41,12 +43,15 @@ public class Robot extends IterativeRobot {
 	public Ultrasonic lultrasonic = new Ultrasonic(7,8);
 	public Ultrasonic rultrasonic = new Ultrasonic(5,6);
 	public Encoder encoder;
-	public DoubleSolenoid flapper = new DoubleSolenoid(2,3);
+	public DoubleSolenoid flapper1 = new DoubleSolenoid(2,3);
+	public DoubleSolenoid flapper2 = new DoubleSolenoid(4,5);
 	float speedo = 0.2f; 
 
 	public AutoStep step = new AutoStep(drivetrain, navx, encoder, lultrasonic, rultrasonic, this);
 	public AutoStep[] Switch = new AutoStep[5];
 	public int currentStep = 0;
+	public WPI_TalonSRX wheelOne = new WPI_TalonSRX(7);
+	public WPI_TalonSRX wheelTwo = new WPI_TalonSRX(8);
 
 	public void robotInit()
 	{
@@ -119,14 +124,26 @@ public class Robot extends IterativeRobot {
 
 		//operator controls
 		{
+			boolean intakemoving= false;
 			if(operator.getRawButton(2)){
-				flapper.set(DoubleSolenoid.Value.kForward);
-			}else{
-				flapper.set(DoubleSolenoid.Value.kReverse);
-			}
-			if(operator.getRawButton(3)){
+				flapper1.set(DoubleSolenoid.Value.kForward);
+				flapper2.set(DoubleSolenoid.Value.kForward);
 				intake();
+				intakemoving= true;
+			}else{
+				flapper1.set(DoubleSolenoid.Value.kReverse);
+				flapper2.set(DoubleSolenoid.Value.kReverse);
+			}if(operator.getRawButton(3)){
+				intake();
+				intakemoving= true;
+			}if(operator.getRawButton(1)){
+				outtake();
+				intakemoving= true;
+			}if(!intakemoving){
+				wheelOne.set(0);
+				wheelTwo.set(0);	
 			}
+
 		}
 	}
 
@@ -136,7 +153,7 @@ public class Robot extends IterativeRobot {
 		float lerpSpeed = 0.5f;
 		drivetrain.SetLeftSpeed(lerpSpeed);
 		drivetrain.SetRightSpeed(lerpSpeed);
-		flapper.set(DoubleSolenoid.Value.kOff);
+		flapper1.set(DoubleSolenoid.Value.kOff);
 		/*
 		SmartDashboard.putNumber("P: ", turnController.getP());
 		SmartDashboard.putNumber("I: ", turnController.getI());
@@ -166,7 +183,6 @@ public class Robot extends IterativeRobot {
 		turnController.setF(SmartDashboard.getNumber("F: ", turnController.getF()));*/
 		speedo = (float) SmartDashboard.getNumber("Speed: ", 0.2f);
 		System.out.print("Encoders: "+ encoder.getDistance() );
-
 	}
 
 	public void UpdateMotors() {
@@ -204,11 +220,20 @@ public class Robot extends IterativeRobot {
 			driveShifter.set(DoubleSolenoid.Value.kForward);
 		}
 	}
-	public void intake()
-	{
-		//set intake motors
+
+	public void intake(){
+		float wheelspeed = 8f;
+		wheelOne.set(-wheelspeed);
+		wheelTwo.set(wheelspeed);
 	}
+	public void outtake(){
+		float wheelspeed = 8f;
+		wheelOne.set(wheelspeed);
+		wheelTwo.set(-wheelspeed);
+	}
+
 	public void shoot(){
 		//shoot
 	}
+
 }
