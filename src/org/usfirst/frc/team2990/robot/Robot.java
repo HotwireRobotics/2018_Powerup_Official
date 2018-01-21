@@ -37,14 +37,15 @@ public class Robot extends IterativeRobot {
 	//public JoshMotorControllor climber= new JoshMotorControllor(7, lerpSpeed,false);
 	public DoubleSolenoid driveShifter = new DoubleSolenoid(0,1);
 	public Joystick xbox360Controller;
-	public Joystick xboxController;
-	public Ultrasonic ultrasonic = new Ultrasonic(5, 6);
+	public Joystick operator;
+	public Ultrasonic lultrasonic = new Ultrasonic(7,8);
+	public Ultrasonic rultrasonic = new Ultrasonic(5,6);
 	public Encoder encoder;
+	public DoubleSolenoid flapper = new DoubleSolenoid(2,3);
+	float speedo = 0.2f; 
 
-	float speedo = 0.2f; //TODO speed for PID DriveStraight
-
-	public AutoStep step = new AutoStep(drivetrain, navx, encoder);
-	public AutoStep[] autoTest = new AutoStep[1];
+	public AutoStep step = new AutoStep(drivetrain, navx, encoder, lultrasonic, rultrasonic, this);
+	public AutoStep[] Switch = new AutoStep[5];
 	public int currentStep = 0;
 
 	public void robotInit()
@@ -52,32 +53,43 @@ public class Robot extends IterativeRobot {
 		encoder = new Encoder(3,4);
 		encoder.reset();
 
+		lultrasonic.setAutomaticMode(true);
+		lultrasonic.setAutomaticMode(true);
+
+
 	}
 
 	public void autonomousInit() {
-		driveShifter.set(DoubleSolenoid.Value.kReverse);
-		navx.reset();
+		driveShifter.set(DoubleSolenoid.Value.kForward);
 		encoder.reset();
-
-		autoTest[0] = new AutoStep(drivetrain, navx, encoder);
-		autoTest[0].MoveForward(10000.0f, 1.0f);
+		Switch[0] = new AutoStep(drivetrain, navx, encoder, lultrasonic, rultrasonic, this);
+		Switch[1] = new AutoStep(drivetrain, navx, encoder, lultrasonic, rultrasonic, this);
+		Switch[2] = new AutoStep(drivetrain, navx, encoder, lultrasonic, rultrasonic, this);
+		Switch[3] = new AutoStep(drivetrain, navx, encoder, lultrasonic, rultrasonic, this);
+		Switch[4] = new AutoStep(drivetrain, navx, encoder, lultrasonic, rultrasonic, this);
+		Switch[0].NavxReset(.05f);
+		Switch[1].LeftTurnSide(15f, -.5f);
+		Switch[2].UltrasonicTarget(30f, -.7f);
+		Switch[3].AlignUltrasonicLeft(10f, -.4f);
+		Switch[4].Push(5f, .3f);
 		currentStep = 0;
+		Switch[0].InitStep();
 	}
 
 	public void autonomousPeriodic() {
-
+		LogInfo("Left Ultrasonic: "+ lultrasonic.getRangeInches());
+		LogInfo("Right Ultrasonic: "+ rultrasonic.getRangeInches());
 		LogInfo("AUTO");
-		driveShifter.set(DoubleSolenoid.Value.kReverse);
 		//step.Update();
 		UpdateMotors();
-		LogInfo("AutoTest[" + currentStep + "]");
-		
-		if (currentStep < autoTest.length){
-			autoTest[currentStep].Update();
-			if (autoTest[currentStep].isDone) {
+		LogInfo("Switch[" + currentStep + "]");
+
+		if (currentStep < Switch.length){
+			Switch[currentStep].Update();
+			if (Switch[currentStep].isDone) {
 				currentStep++;
-				if (currentStep < autoTest.length) {
-					autoTest[currentStep].InitStep();
+				if (currentStep < Switch.length) {
+					Switch[currentStep].InitStep();
 				}
 			}
 		}
@@ -87,10 +99,9 @@ public class Robot extends IterativeRobot {
 
 		LogInfo("TELEOP");
 
-		ultrasonic.setAutomaticMode(true);
 
 		xbox360Controller = new Joystick(0);
-		xboxController = new Joystick(1);
+		operator = new Joystick(1);
 
 
 		float lerpSpeed = 0.5f;
@@ -106,20 +117,33 @@ public class Robot extends IterativeRobot {
 		UpdateMotors();
 		ControllerDrive();
 
+		//operator controls
+		{
+			if(operator.getRawButton(2)){
+				flapper.set(DoubleSolenoid.Value.kForward);
+			}else{
+				flapper.set(DoubleSolenoid.Value.kReverse);
+			}
+			if(operator.getRawButton(3)){
+				intake();
+			}
+		}
 	}
 
 	public void testInit() {
 		xbox360Controller = new Joystick(0);
-		xboxController = new Joystick(1);
+		operator = new Joystick(1);
 		float lerpSpeed = 0.5f;
 		drivetrain.SetLeftSpeed(lerpSpeed);
 		drivetrain.SetRightSpeed(lerpSpeed);
+		flapper.set(DoubleSolenoid.Value.kOff);
 		/*
 		SmartDashboard.putNumber("P: ", turnController.getP());
 		SmartDashboard.putNumber("I: ", turnController.getI());
 		SmartDashboard.putNumber("D: ", turnController.getD());
-		SmartDashboard.putNumber("F: ", turnController.getF());
-		*/
+		SmartDashboard.
+("F: ", turnController.getF());
+		 */
 		SmartDashboard.putNumber("Speed: ", speedo);
 	}
 	public void testPeriodic() {
@@ -134,14 +158,14 @@ public class Robot extends IterativeRobot {
 		UpdateMotors();
 		SmartDashboard.putNumber("NavX: ", navx.getYaw());
 		SmartDashboard.putNumber("Encoder: ", encoder.getDistance());
-		SmartDashboard.putNumber("Ultrasonic: ", ultrasonic.getRangeInches());
+		SmartDashboard.putNumber("Left Ultrasonic: ", lultrasonic.getRangeInches());
+		SmartDashboard.putNumber("Right Ultrasonic: ", rultrasonic.getRangeInches());
 		/*turnController.setP(SmartDashboard.getNumber("P: ", turnController.getP()));
 		turnController.setI(SmartDashboard.getNumber("I: ", turnController.getI()));
 		turnController.setD(SmartDashboard.getNumber("D: ", turnController.getD()));
 		turnController.setF(SmartDashboard.getNumber("F: ", turnController.getF()));*/
 		speedo = (float) SmartDashboard.getNumber("Speed: ", 0.2f);
 		System.out.print("Encoders: "+ encoder.getDistance() );
-
 
 	}
 
@@ -179,5 +203,12 @@ public class Robot extends IterativeRobot {
 		if (xbox360Controller.getRawButton(6)) {
 			driveShifter.set(DoubleSolenoid.Value.kForward);
 		}
+	}
+	public void intake()
+	{
+		//set intake motors
+	}
+	public void shoot(){
+		//shoot
 	}
 }
