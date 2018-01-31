@@ -7,7 +7,7 @@ import edu.wpi.first.wpilibj.Timer;
 
 public class AutoStep {
 	public enum StepType {
-		RotateLeft, RotateRight, Forward, UltrasonicTarget, AlignUltrasonicLeft, LeftTurnSide, NavxReset, Push
+		RotateLeft, RotateRight, Forward, UltrasonicTarget, AlignUltrasonicLeft, LeftTurnSide, NavxReset, Push, RightTurnSide, WallTrackLeft, WallTrackRight
 	}
 
 	public StepType type;
@@ -20,18 +20,20 @@ public class AutoStep {
 	public float encoderTarget;
 	public Ultrasonic lultrasonic;
 	public Ultrasonic rultrasonic;
+	public Ultrasonic LeftSideUltrasonic;
+	public Ultrasonic ultradown;
 	public float ultrasonicTarget;
 	public Timer navxTime;
 	public Timer pushtime;
 	public float timecap;
 	public Robot robot;
-	public AutoStep(DriveTrain choochoo, AHRS gyro, Encoder encode, Ultrasonic lsonar, Ultrasonic rsonar, Robot robot) {
+	public AutoStep(DriveTrain choochoo, AHRS gyro, Ultrasonic lsonar, Ultrasonic rsonar, Ultrasonic  leftsideultrasonic, Robot robot) {
 		drivetrain = choochoo;
 		navx = gyro;
-		encoder = encode;
 		lultrasonic = lsonar;
 		rultrasonic = rsonar;
 		this.robot = robot;
+		ultradown = leftsideultrasonic;
 
 		navxTime = new Timer();
 		pushtime = new Timer();
@@ -65,6 +67,11 @@ public class AutoStep {
 		rotateTarget = deg;
 		speed = sped;		
 	}
+	public void RightTurnSide(float deg, float sped){
+		type = StepType.RightTurnSide;
+		rotateTarget = deg;
+		speed = sped;		
+	}
 	public void NavxReset(float time){
 		type = StepType.NavxReset;
 		timecap = time;
@@ -78,10 +85,17 @@ public class AutoStep {
 		type = StepType.Push; 
 		timecap = time;
 	}
+	public void WallTrackRight(float sped){
+		type = StepType.WallTrackRight;
+		this.speed = sped;
+	}
+	public void WallTrackLeft(float sped){
+		this.speed = sped;
+		type = StepType.WallTrackLeft;
+	}
 
 	public void Update() {
 		LogInfo("NavX: " + navx.getYaw());
-		LogInfo("Encoder: " + encoder.getDistance());
 		drivetrain.SetLeftSpeed(0.0f);
 		drivetrain.SetRightSpeed(0.0f);
 		double adjustment = Math.pow(35.0f, speed);
@@ -130,6 +144,13 @@ public class AutoStep {
 				isDone= true;
 			}
 		}
+		if(type == StepType.RightTurnSide){
+			if((Math.abs(navx.getYaw()) > rotateTarget - adjustment)){
+				drivetrain.SetRightSpeed(speed);
+			}else{
+				isDone= true;
+			}
+		}
 		if(type == StepType.NavxReset){
 			if(navxTime.get() > timecap){
 				navxTime.stop();
@@ -140,21 +161,34 @@ public class AutoStep {
 			if(pushtime.get() < timecap){
 				drivetrain.SetBothSpeed(speed);
 			}else{
-				
+
 				robot.shoot();
+			}
+		}
+		if(type == StepType.WallTrackLeft){
+			System.out.println("In here");
+			System.out.println("Ultradown:" + ultradown.getRangeInches());
+			if(ultradown.getRangeInches() > 3.2 ){
+				drivetrain.SetRightSpeed(speed);
+				drivetrain.SetLeftSpeed(-speed);
+
+			}else{
+				drivetrain.SetBothSpeed(0);
+				isDone = true;
 			}
 		}
 	}
 
-	public void InitStep()
-	{
-		navx.reset();
-		navxTime.start();
-		pushtime.start();
-	}
 
-	public void LogInfo(String info) {
-		System.out.println(info + ";    ");
-	}
+public void InitStep()
+{
+	navx.reset();
+	navxTime.start();
+	pushtime.start();
+}
+
+public void LogInfo(String info) {
+	System.out.println(info + ";    ");
+}
 
 }
