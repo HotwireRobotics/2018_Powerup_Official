@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.CameraServer;
 
 import javax.sound.midi.ControllerEventListener;
@@ -62,6 +63,14 @@ public class Robot extends IterativeRobot {
 	float speedo = 0.2f; 
 	public boolean On; 
 	public boolean Off;
+	//arm
+	public float forwardArmOneSpeed;
+	public float backwardArmOneSpeed;
+	public float forwardArmTwoSpeed;
+	public float backwardArmTwoSpeed;
+	public Talon armOne = new Talon(5);
+	public Talon armTwo = new Talon(6);
+
 	//}
 
 	//Auto
@@ -165,6 +174,10 @@ public class Robot extends IterativeRobot {
 		lultrasonic.setAutomaticMode(true);
 		rultrasonic.setAutomaticMode(true);
 		LogInfo("TELEOP");
+		SmartDashboard.putNumber("Forward Arm Speed ONE: ", forwardArmOneSpeed);
+		SmartDashboard.putNumber("Backward Arm Speed ONE: ", backwardArmOneSpeed);
+		SmartDashboard.putNumber("Forward Arm Speed TWO: ", forwardArmTwoSpeed);
+		SmartDashboard.putNumber("Backward Arm Speed TWO: ", backwardArmTwoSpeed);
 
 
 		xbox360Controller = new Joystick(0);
@@ -203,6 +216,7 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putBoolean("Ultrasonic Down", ultradown);
 		SmartDashboard.putNumber("Navx Z: ", navx.getRawGyroZ());
 		SmartDashboard.putNumber("Max Navx Z: ", largestZ);
+		
 
 		
 		if(pitch - navx.getPitch() < 0){
@@ -217,6 +231,19 @@ public class Robot extends IterativeRobot {
 		
 		if(operator.getRawButton(7)){
 			navx.reset();
+		}
+		
+		if (xbox360Controller.getRawButton(1)) {
+			armOne.set(SmartDashboard.getNumber("Forward Arm Speed ONE: ", forwardArmOneSpeed));
+		}
+		if (xbox360Controller.getRawButton(2)) {
+			armOne.set(SmartDashboard.getNumber("Backward Arm Speed ONE: ", backwardArmOneSpeed));
+		}
+		if (xbox360Controller.getRawButton(3)) {
+			armTwo.set(SmartDashboard.getNumber("Forward Arm Speed TWO: ", forwardArmTwoSpeed));
+		}
+		if (xbox360Controller.getRawButton(4)) {
+			armTwo.set(SmartDashboard.getNumber("Backward Arm SpeedTWO: ", backwardArmTwoSpeed));
 		}
 		/*
 		//operator controls
