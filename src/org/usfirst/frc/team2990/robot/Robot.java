@@ -17,6 +17,7 @@ import edu.wpi.cscore.UsbCamera;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.Ultrasonic;
+import edu.wpi.first.wpilibj.Victor;
 
 
 public class Robot extends IterativeRobot {
@@ -33,13 +34,13 @@ public class Robot extends IterativeRobot {
 
 	//Drivetrain
 	//{
-	public DriveTrain drivetrain = new DriveTrain(8, 7, 10, 9, navx);
+	public DriveTrain drivetrain = new DriveTrain(10, 9, 7, 8, navx);
 	//}
 
 	//neumatics
 	//{
-	public DoubleSolenoid flapper1 = new DoubleSolenoid(2,3);
-	public DoubleSolenoid flapper2 = new DoubleSolenoid(4,5);
+	public DoubleSolenoid flapper1 = new DoubleSolenoid(0,1);
+	public DoubleSolenoid flapper2 = new DoubleSolenoid(2,3);
 	//}
 
 	//Joysticks
@@ -50,10 +51,10 @@ public class Robot extends IterativeRobot {
 
 	//Shooting
 	//{
-	public WPI_TalonSRX wheelOne = new WPI_TalonSRX(7);
-	public WPI_TalonSRX wheelTwo = new WPI_TalonSRX(8);
-	public WPI_TalonSRX wheelThree = new WPI_TalonSRX(9);
-	public WPI_TalonSRX wheelFour = new WPI_TalonSRX(10);
+	public Victor wheelOne = new Victor(8);
+	public Victor wheelTwo = new Victor(9);
+//	public WPI_TalonSRX wheelThree = new WPI_TalonSRX(9);
+//	public WPI_TalonSRX wheelFour = new WPI_TalonSRX(10);
 
 	//}
 
@@ -64,12 +65,10 @@ public class Robot extends IterativeRobot {
 	public boolean On; 
 	public boolean Off;
 	//arm
-	public float forwardArmOneSpeed;
-	public float backwardArmOneSpeed;
-	public float forwardArmTwoSpeed;
-	public float backwardArmTwoSpeed;
-	public Talon armOne = new Talon(5);
-	public Talon armTwo = new Talon(6);
+	public float forwardArmOneSpeed = .2f;
+	public float backwardArmOneSpeed = -.2f;
+	public Talon armOne = new Talon(4);
+	public Talon armTwo = new Talon(5);
 
 	//}
 
@@ -152,12 +151,12 @@ public class Robot extends IterativeRobot {
 	}
 
 	public void autonomousPeriodic() {
-		LogInfo("Left Ultrasonic: "+ lultrasonic.getRangeInches());
-		LogInfo("Right Ultrasonic: "+ rultrasonic.getRangeInches());
-		LogInfo("AUTO");
+		//LogInfo("Left Ultrasonic: "+ lultrasonic.getRangeInches());
+		//LogInfo("Right Ultrasonic: "+ rultrasonic.getRangeInches());
+		//LogInfo("AUTO");
 		//step.Update();
 		UpdateMotors();
-		LogInfo("Switch[" + currentStep + "]");
+		//LogInfo("Switch[" + currentStep + "]");
 
 		if (currentStep < AutonomousUsing.length){
 			AutonomousUsing[currentStep].Update();
@@ -173,12 +172,9 @@ public class Robot extends IterativeRobot {
 	public void teleopInit() {
 		lultrasonic.setAutomaticMode(true);
 		rultrasonic.setAutomaticMode(true);
-		LogInfo("TELEOP");
+		//LogInfo("TELEOP");
 		SmartDashboard.putNumber("Forward Arm Speed ONE: ", forwardArmOneSpeed);
 		SmartDashboard.putNumber("Backward Arm Speed ONE: ", backwardArmOneSpeed);
-		SmartDashboard.putNumber("Forward Arm Speed TWO: ", forwardArmTwoSpeed);
-		SmartDashboard.putNumber("Backward Arm Speed TWO: ", backwardArmTwoSpeed);
-
 
 		xbox360Controller = new Joystick(0);
 		operator = new Joystick(1);
@@ -193,7 +189,7 @@ public class Robot extends IterativeRobot {
 		//LogInfo("Ultrasonic: " + ultrasonic.getRangeInches());
 		//LogInfo("Navx: " + navx.getYaw());
 
-		System.out.println("NavxZ:" + navx.getRawGyroZ());
+		//System.out.println("NavxZ:" + navx.getRawGyroZ());
 		if(navx.getRawGyroZ() > largestZ){
 			largestZ = navx.getRawGyroZ();
 		}
@@ -224,10 +220,10 @@ public class Robot extends IterativeRobot {
 		}else{
 			pitchvalue = true;
 		}
-		System.out.println("Left Ultrasonic: "+ lultrasonic.getRangeInches());
-		System.out.println("Right Ultrasonic: "+ rultrasonic.getRangeInches());
-		System.out.println("Right Side Ultrasonic: "+ rightsideultrasonic.getRangeInches());
-		System.out.println("Left side Ultrasonic: "+ leftsideultrasonic.getRangeInches());
+		//System.out.println("Left Ultrasonic: "+ lultrasonic.getRangeInches());
+		//System.out.println("Right Ultrasonic: "+ rultrasonic.getRangeInches());
+		//System.out.println("Right Side Ultrasonic: "+ rightsideultrasonic.getRangeInches());
+		//System.out.println("Left side Ultrasonic: "+ leftsideultrasonic.getRangeInches());
 		
 		if(operator.getRawButton(7)){
 			navx.reset();
@@ -235,17 +231,15 @@ public class Robot extends IterativeRobot {
 		
 		if (xbox360Controller.getRawButton(1)) {
 			armOne.set(SmartDashboard.getNumber("Forward Arm Speed ONE: ", forwardArmOneSpeed));
-		}
-		if (xbox360Controller.getRawButton(2)) {
+			armTwo.set(SmartDashboard.getNumber("Forward Arm Speed TWO: ", forwardArmOneSpeed));
+		} else if (xbox360Controller.getRawButton(2)) {
 			armOne.set(SmartDashboard.getNumber("Backward Arm Speed ONE: ", backwardArmOneSpeed));
+			armTwo.set(SmartDashboard.getNumber("Backward Arm SpeedTWO: ", backwardArmOneSpeed));
+		} else {
+			armOne.set(0);
+			armTwo.set(0);
 		}
-		if (xbox360Controller.getRawButton(3)) {
-			armTwo.set(SmartDashboard.getNumber("Forward Arm Speed TWO: ", forwardArmTwoSpeed));
-		}
-		if (xbox360Controller.getRawButton(4)) {
-			armTwo.set(SmartDashboard.getNumber("Backward Arm SpeedTWO: ", backwardArmTwoSpeed));
-		}
-		/*
+		
 		//operator controls
 		{
 			boolean intakemoving= false;
@@ -256,7 +250,6 @@ public class Robot extends IterativeRobot {
 				//intakemoving= true;
 				flapper1.set(DoubleSolenoid.Value.kForward);
 				flapper2.set(DoubleSolenoid.Value.kForward);
-				isOn();
 			}else{
 				flapper1.set(DoubleSolenoid.Value.kReverse);
 				flapper2.set(DoubleSolenoid.Value.kReverse);
@@ -269,13 +262,14 @@ public class Robot extends IterativeRobot {
 			}if(!intakemoving){
 				wheelOne.set(0);
 				wheelTwo.set(0);	
-				wheelThree.set(0);
-				wheelFour.set(0);
+				//wheelThree.set(0);
+				//wheelFour.set(0);
 			}
 			if(operator.getRawButton(8)){
 				shoot();
 			}
-*/
+		}
+
 			
 			
 			/*
@@ -366,24 +360,24 @@ public class Robot extends IterativeRobot {
 		float wheelspeed = .8f;
 		wheelOne.set(-wheelspeed);
 		wheelTwo.set(-wheelspeed);
-		wheelThree.set(wheelspeed);
-		wheelFour.set(wheelspeed);
+		//wheelThree.set(wheelspeed);
+		//wheelFour.set(wheelspeed);
 	}
 	public void outtake(){
 		float wheelspeed = .99f;
 		wheelOne.set(wheelspeed);
 		wheelTwo.set(wheelspeed);
-		wheelThree.set(-wheelspeed);
-		wheelFour.set(-wheelspeed);
+		//wheelThree.set(-wheelspeed);
+		//wheelFour.set(-wheelspeed);
 
 	}
 	public void shoot(){
 
 		float wheelspeed = 1f;
 		wheelOne.set(wheelspeed);
-		wheelTwo.set(wheelspeed);
-		wheelThree.set(-wheelspeed);
-		wheelFour.set(-wheelspeed);
+		wheelTwo.set(-wheelspeed);
+		//wheelThree.set(-wheelspeed);
+		//wheelFour.set(-wheelspeed);
 
 
 	}
