@@ -124,7 +124,7 @@ public class AutoStep {
 			}
 		}
 		if (type == StepType.UltrasonicTarget) {
-			if (lultrasonic.getRangeInches() > ultrasonicTarget && rultrasonic.getRangeInches() > ultrasonicTarget) {
+			if (lultrasonic.getRangeInches() > ultrasonicTarget) {
 				drivetrain.DriveStraight(speed, false);
 			} else {
 				isDone = true;

@@ -5,6 +5,8 @@ import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PIDController;
+import edu.wpi.first.wpilibj.PIDInterface;
+import edu.wpi.first.wpilibj.PIDOutput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Talon;
@@ -25,10 +27,10 @@ public class Robot extends IterativeRobot {
 	//Sensors
 	//{
 	public AHRS navx = new AHRS(SPI.Port.kMXP);
-	public Ultrasonic lultrasonic = new Ultrasonic(8,9);
-	public Ultrasonic rultrasonic = new Ultrasonic(2,3);
-	public Ultrasonic rightsideultrasonic = new Ultrasonic(4,5);
-	public Ultrasonic leftsideultrasonic = new Ultrasonic(6,7);
+	public Ultrasonic lultrasonic = new Ultrasonic(4,5);
+	public Ultrasonic rultrasonic = new Ultrasonic(7,8);
+	public Ultrasonic rightsideultrasonic = new Ultrasonic(2,3);
+	public Ultrasonic leftsideultrasonic = new Ultrasonic(0,1);
 	public CameraServer camera;
 	//}
 
@@ -47,14 +49,15 @@ public class Robot extends IterativeRobot {
 	//{
 	public Joystick xbox360Controller;
 	public Joystick operator;
+	public Joystick debug;
 	//}
 
 	//Shooting
 	//{
 	public Victor wheelOne = new Victor(8);
-	public Victor wheelTwo = new Victor(9);
-//	public WPI_TalonSRX wheelThree = new WPI_TalonSRX(9);
-//	public WPI_TalonSRX wheelFour = new WPI_TalonSRX(10);
+	public Victor wheelTwo = new Victor(7);
+	public Victor wheelThree = new Victor(9);
+	public Victor wheelFour = new Victor(6);
 
 	//}
 
@@ -65,7 +68,7 @@ public class Robot extends IterativeRobot {
 	public boolean On; 
 	public boolean Off;
 	//arm
-	public float forwardArmOneSpeed = .2f;
+	public float forwardArmOneSpeed = .4f;
 	public float backwardArmOneSpeed = -.2f;
 	public Talon armOne = new Talon(4);
 	public Talon armTwo = new Talon(5);
@@ -75,7 +78,7 @@ public class Robot extends IterativeRobot {
 	//Auto
 	//{
 	public AutoStep step = new AutoStep(drivetrain, navx, lultrasonic, rultrasonic, leftsideultrasonic, this);
-	public AutoStep[] Switch = new AutoStep[5];
+	public AutoStep[] Switch = new AutoStep[4];
 	public AutoStep[] Scale = new AutoStep[1];
 	public AutoStep[] AutonomousUsing;
 	public int currentStep = 0;
@@ -84,12 +87,12 @@ public class Robot extends IterativeRobot {
 	public boolean pitchvalue;
 	public boolean ultradown;
 	public float largestZ;
-	
+//	PIDController turnController;
 	public void robotInit()
 	{
 		pitch = navx.getPitch() *1000;
-		//PIDController turnController;
-		//turnController = new PIDController(5.00, 1.0, 0.00020, 0, ultrasonicFinal, this);
+	
+		//turnController = new PIDController(5.00, 1.0, 0.00020, 0, leftsideultrasonic, (PIDOutput) this);
 		//turnController.setInputRange(-180.0f, 180.0f);
 		//turnController.setOutputRange(-1.0f, 1.0f);
 		//turnController.setAbsoluteTolerance(2.0);
@@ -130,24 +133,22 @@ public class Robot extends IterativeRobot {
 		Switch[1] = new AutoStep(drivetrain, navx, lultrasonic, rultrasonic, leftsideultrasonic, this);
 		Switch[2] = new AutoStep(drivetrain, navx, lultrasonic, rultrasonic,leftsideultrasonic, this);
 		Switch[3] = new AutoStep(drivetrain, navx, lultrasonic, rultrasonic, leftsideultrasonic, this);
-		Switch[4] = new AutoStep(drivetrain, navx, lultrasonic, rultrasonic,leftsideultrasonic, this);
 		Switch[0].NavxReset(.05f);
 		Scale[0] = new AutoStep(drivetrain, navx, lultrasonic, rultrasonic,leftsideultrasonic, this);
 		if (gameColors.charAt(0) == 'L')
 		{
-			Switch[1].LeftTurnSide(15f, -.5f);
+			Switch[1].LeftTurnSide(15f, .7f);
 		} else
 		{
-			Switch[1].RightTurnSide(15f, -.5f);
+			Switch[1].RightTurnSide(15f, .7f);
 		}
 
-		Switch[2].UltrasonicTarget(30f, -.7f);
-		Switch[3].AlignUltrasonicLeft(10f, -.4f);
-		Switch[4].Push(5f, .3f);
+		Switch[2].UltrasonicTarget(30f, .7f);
+		Switch[3].Push(5f, .3f);
 		currentStep = 0;
 		Switch[0].InitStep();
 		Scale[0].WallTrackLeft(0.3f);
-		AutonomousUsing = Scale;
+		AutonomousUsing = Switch;
 	}
 
 	public void autonomousPeriodic() {
@@ -156,7 +157,7 @@ public class Robot extends IterativeRobot {
 		//LogInfo("AUTO");
 		//step.Update();
 		UpdateMotors();
-		//LogInfo("Switch[" + currentStep + "]");
+		LogInfo("Switch[" + currentStep + "]");
 
 		if (currentStep < AutonomousUsing.length){
 			AutonomousUsing[currentStep].Update();
@@ -178,6 +179,7 @@ public class Robot extends IterativeRobot {
 
 		xbox360Controller = new Joystick(0);
 		operator = new Joystick(1);
+		debug = new Joystick(3);
 
 
 		float lerpSpeed = 0.5f;
@@ -188,6 +190,10 @@ public class Robot extends IterativeRobot {
 	public void teleopPeriodic() {
 		//LogInfo("Ultrasonic: " + ultrasonic.getRangeInches());
 		//LogInfo("Navx: " + navx.getYaw());
+		//SmartDashboard.putNumber("P: ", ((PIDInterface) leftsideultrasonic).getP());
+		//SmartDashboard.putNumber("I: ", ((PIDInterface) leftsideultrasonic).getI());
+		//SmartDashboard.putNumber("D: ", ((PIDInterface) leftsideultrasonic).getD());
+		//SmartDashboard.putNumber("F: ", turnController.getF());
 
 		//System.out.println("NavxZ:" + navx.getRawGyroZ());
 		if(navx.getRawGyroZ() > largestZ){
@@ -229,15 +235,23 @@ public class Robot extends IterativeRobot {
 			navx.reset();
 		}
 		
-		if (xbox360Controller.getRawButton(1)) {
+		if (xbox360Controller.getRawButton(6)) {
 			armOne.set(SmartDashboard.getNumber("Forward Arm Speed ONE: ", forwardArmOneSpeed));
 			armTwo.set(SmartDashboard.getNumber("Forward Arm Speed TWO: ", forwardArmOneSpeed));
-		} else if (xbox360Controller.getRawButton(2)) {
+		} else if (xbox360Controller.getRawButton(7)) {
 			armOne.set(SmartDashboard.getNumber("Backward Arm Speed ONE: ", backwardArmOneSpeed));
 			armTwo.set(SmartDashboard.getNumber("Backward Arm SpeedTWO: ", backwardArmOneSpeed));
 		} else {
 			armOne.set(0);
 			armTwo.set(0);
+		}
+		
+		if(debug.getRawButton(8)){
+			//turnController.setP(SmartDashboard.getNumber("P: ", turnController.getP()));
+			//turnController.setI(SmartDashboard.getNumber("I: ", turnController.getI()));
+			//turnController.setD(SmartDashboard.getNumber("D: ", turnController.getD()));
+			//turnController.setF(SmartDashboard.getNumber("F: ", turnController.getF()));
+			speedo = (float) SmartDashboard.getNumber("Speed: ", 0.2f);
 		}
 		
 		//operator controls
@@ -256,19 +270,22 @@ public class Robot extends IterativeRobot {
 			}if(operator.getRawButton(3)){
 				intake();
 				intakemoving= true;
+			}else{
+				intakemoving = false;
 			}if(operator.getRawButton(1)){
 				outtake();
 				intakemoving= true;
 			}if(!intakemoving){
 				wheelOne.set(0);
 				wheelTwo.set(0);	
-				//wheelThree.set(0);
-				//wheelFour.set(0);
+				wheelThree.set(0);
+				wheelFour.set(0);
 			}
 			if(operator.getRawButton(8)){
 				shoot();
 			}
 		}
+		
 
 			
 			
@@ -296,13 +313,9 @@ public class Robot extends IterativeRobot {
 		drivetrain.SetLeftSpeed(lerpSpeed);
 		drivetrain.SetRightSpeed(lerpSpeed);
 		flapper1.set(DoubleSolenoid.Value.kOff);
-		/*
-		SmartDashboard.putNumber("P: ", turnController.getP());
-		SmartDashboard.putNumber("I: ", turnController.getI());
-		SmartDashboard.putNumber("D: ", turnController.getD());
-		SmartDashboard.
-("F: ", turnController.getF());
-		 */
+		
+
+		
 		SmartDashboard.putNumber("Speed: ", speedo);
 	}
 	public void testPeriodic() {
@@ -319,11 +332,7 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("NavX: ", navx.getYaw());
 		SmartDashboard.putNumber("Left Ultrasonic: ", lultrasonic.getRangeInches());
 		SmartDashboard.putNumber("Right Ultrasonic: ", rultrasonic.getRangeInches());
-		/*turnController.setP(SmartDashboard.getNumber("P: ", turnController.getP()));
-		turnController.setI(SmartDashboard.getNumber("I: ", turnController.getI()));
-		turnController.setD(SmartDashboard.getNumber("D: ", turnController.getD()));
-		turnController.setF(SmartDashboard.getNumber("F: ", turnController.getF()));*/
-		speedo = (float) SmartDashboard.getNumber("Speed: ", 0.2f);
+	
 	}
 
 	public void UpdateMotors() {
@@ -359,25 +368,25 @@ public class Robot extends IterativeRobot {
 	public void intake(){
 		float wheelspeed = .8f;
 		wheelOne.set(-wheelspeed);
-		wheelTwo.set(-wheelspeed);
-		//wheelThree.set(wheelspeed);
-		//wheelFour.set(wheelspeed);
+		wheelTwo.set(wheelspeed);
+		wheelThree.set(-wheelspeed);
+		wheelFour.set(wheelspeed);
 	}
 	public void outtake(){
 		float wheelspeed = .99f;
 		wheelOne.set(wheelspeed);
-		wheelTwo.set(wheelspeed);
-		//wheelThree.set(-wheelspeed);
-		//wheelFour.set(-wheelspeed);
+		wheelTwo.set(-wheelspeed);
+		wheelThree.set(wheelspeed);
+		wheelFour.set(-wheelspeed);
 
 	}
 	public void shoot(){
 
-		float wheelspeed = 1f;
+		float wheelspeed = 1.0f;
 		wheelOne.set(wheelspeed);
 		wheelTwo.set(-wheelspeed);
-		//wheelThree.set(-wheelspeed);
-		//wheelFour.set(-wheelspeed);
+		wheelThree.set(wheelspeed);
+		wheelFour.set(-wheelspeed);
 
 
 	}
