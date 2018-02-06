@@ -120,7 +120,7 @@ public class Robot extends IterativeRobot {
 	}
 
 	public void autonomousInit() {
-		
+		drivetrain.SetBreak();
 		String gameColors = DriverStation.getInstance().getGameSpecificMessage();
 		if (gameColors.charAt(0) == 'L')
 		{
@@ -133,18 +133,17 @@ public class Robot extends IterativeRobot {
 		Switch[1] = new AutoStep(drivetrain, navx, lultrasonic, rultrasonic, leftsideultrasonic, this);
 		Switch[2] = new AutoStep(drivetrain, navx, lultrasonic, rultrasonic,leftsideultrasonic, this);
 		Switch[3] = new AutoStep(drivetrain, navx, lultrasonic, rultrasonic, leftsideultrasonic, this);
-		Switch[0].NavxReset(.05f);
+		Switch[0].NavxReset(.06f);
 		Scale[0] = new AutoStep(drivetrain, navx, lultrasonic, rultrasonic,leftsideultrasonic, this);
 		if (gameColors.charAt(0) == 'L')
 		{
-			Switch[1].LeftTurnSide(15f, .7f);
-		} else
-		{
-			Switch[1].RightTurnSide(15f, .7f);
+			Switch[1].RightTurnSide(12f, 1f);
+		} else {
+			Switch[1].LeftTurnSide(11f, 1f);
 		}
 
-		Switch[2].UltrasonicTarget(30f, .7f);
-		Switch[3].Push(5f, .3f);
+		Switch[2].UltrasonicTarget(30f, .8f);
+		Switch[3].Push(1f, .4f);
 		currentStep = 0;
 		Switch[0].InitStep();
 		Scale[0].WallTrackLeft(0.3f);
@@ -152,13 +151,17 @@ public class Robot extends IterativeRobot {
 	}
 
 	public void autonomousPeriodic() {
-		//LogInfo("Left Ultrasonic: "+ lultrasonic.getRangeInches());
-		//LogInfo("Right Ultrasonic: "+ rultrasonic.getRangeInches());
+		LogInfo("Left Ultrasonic: "+ lultrasonic.getRangeInches());
+		LogInfo("Right Ultrasonic: "+ rultrasonic.getRangeInches());
 		//LogInfo("AUTO");
 		//step.Update();
 		UpdateMotors();
 		LogInfo("Switch[" + currentStep + "]");
 
+		if((currentStep != 3)){
+			intake();
+		}
+		
 		if (currentStep < AutonomousUsing.length){
 			AutonomousUsing[currentStep].Update();
 			if (AutonomousUsing[currentStep].isDone) {
@@ -171,6 +174,7 @@ public class Robot extends IterativeRobot {
 	}
 
 	public void teleopInit() {
+		drivetrain.SetCoast();
 		lultrasonic.setAutomaticMode(true);
 		rultrasonic.setAutomaticMode(true);
 		//LogInfo("TELEOP");
@@ -382,7 +386,7 @@ public class Robot extends IterativeRobot {
 	}
 	public void shoot(){
 
-		float wheelspeed = 1.0f;
+		float wheelspeed = 0.5f;
 		wheelOne.set(wheelspeed);
 		wheelTwo.set(-wheelspeed);
 		wheelThree.set(wheelspeed);

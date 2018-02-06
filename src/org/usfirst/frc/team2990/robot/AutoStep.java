@@ -83,6 +83,7 @@ public class AutoStep {
 	}
 	public void Push(float time, float sped){
 		type = StepType.Push; 
+		speed = sped;
 		timecap = time;
 	}
 	public void WallTrackRight(float sped){
@@ -112,6 +113,7 @@ public class AutoStep {
 			if (navx.getYaw() > rotateTarget + adjustment) {
 				drivetrain.SetLeftSpeed(-speed);
 				drivetrain.SetRightSpeed(-speed);
+				
 			} else {
 				isDone = true;
 			}
@@ -138,15 +140,15 @@ public class AutoStep {
 			}
 		}
 		if(type == StepType.LeftTurnSide){
-			if((Math.abs(navx.getYaw()) < rotateTarget - adjustment)){
+			if((Math.abs(navx.getYaw()) < rotateTarget)){
 				drivetrain.SetLeftSpeed(speed);
 			}else{
 				isDone= true;
 			}
 		}
 		if(type == StepType.RightTurnSide){
-			if((Math.abs(navx.getYaw()) > rotateTarget - adjustment)){
-				drivetrain.SetRightSpeed(speed);
+			if((Math.abs(navx.getYaw()) < rotateTarget)){
+				drivetrain.SetRightSpeed(-speed);
 			}else{
 				isDone= true;
 			}
@@ -158,11 +160,16 @@ public class AutoStep {
 			}
 		}
 		if(type == StepType.Push){
+			System.out.println("Pushtime: " + pushtime.get());
+			System.out.println("TimeCap:" + timecap);
 			if(pushtime.get() < timecap){
-				drivetrain.SetBothSpeed(speed);
+				drivetrain.SetRightSpeed(-speed);
+				drivetrain.SetLeftSpeed(speed);
+				if(pushtime.get() >= .3f){
+					robot.shoot();
+				}
 			}else{
-
-				robot.shoot();
+				isDone = true;
 			}
 		}
 		if(type == StepType.WallTrackLeft){

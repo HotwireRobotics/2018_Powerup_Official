@@ -60,9 +60,9 @@ public class JoshMotorControllor {
 	}
 	
 	public void SetBrake(){
-		//talon.enableBrakeMode(true);
+		talon.setNeutralMode(NeutralMode.Brake);
 	}
 	public void SetCoast(){
-		//talon.enableBrakeMode(false);
+		talon.setNeutralMode(NeutralMode.Coast);
 	}
 }
