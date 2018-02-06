@@ -67,6 +67,7 @@ public class Robot extends IterativeRobot {
 	float speedo = 0.2f; 
 	public boolean On; 
 	public boolean Off;
+	public boolean intakeMoving;
 	//arm
 	public float forwardArmOneSpeed = .4f;
 	public float backwardArmOneSpeed = -.2f;
@@ -256,33 +257,39 @@ public class Robot extends IterativeRobot {
 		
 		//operator controls
 		{
-			boolean intakemoving= false;
-			if(operator.getRawButton(2)){
-				//flapper1.set(DoubleSolenoid.Value.kForward);
-				//flapper2.set(DoubleSolenoid.Value.kForward);
-				//intake();
-				//intakemoving= true;
+			
+			if(operator.getRawButton(1)){
+				intake();
+				intakeMoving = true;
 				flapper1.set(DoubleSolenoid.Value.kForward);
 				flapper2.set(DoubleSolenoid.Value.kForward);
-			}else{
+			}else if(operator.getRawButton(4)){
 				flapper1.set(DoubleSolenoid.Value.kReverse);
 				flapper2.set(DoubleSolenoid.Value.kReverse);
-			}if(operator.getRawButton(3)){
-				intake();
-				intakemoving= true;
-			}else{
-				intakemoving = false;
-			}if(operator.getRawButton(1)){
 				outtake();
-				intakemoving= true;
-			}if(!intakemoving){
+				intakeMoving = true;
+			}else if(operator.getRawAxis(3) > .1){
+				flapper1.set(DoubleSolenoid.Value.kReverse);
+				flapper2.set(DoubleSolenoid.Value.kReverse);
+				intakeMoving =true;
+				shoot();
+			}else if(operator.getRawButton(2)){
+				intake();
+				intakeMoving = true;
+			}else{
+				intakeMoving = false;
+				flapper1.set(DoubleSolenoid.Value.kReverse);
+				flapper2.set(DoubleSolenoid.Value.kReverse);
+			}
+			if(operator.getRawButton(3)){
+				flapper1.set(DoubleSolenoid.Value.kForward);
+				flapper2.set(DoubleSolenoid.Value.kForward);
+			}
+			if(intakeMoving = false){
 				wheelOne.set(0);
-				wheelTwo.set(0);	
+				wheelTwo.set(0);
 				wheelThree.set(0);
 				wheelFour.set(0);
-			}
-			if(operator.getRawButton(8)){
-				shoot();
 			}
 		}
 		
