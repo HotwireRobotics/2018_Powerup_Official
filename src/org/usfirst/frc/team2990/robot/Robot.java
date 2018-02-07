@@ -20,6 +20,9 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.Victor;
+import edu.wpi.first.wpilibj.interfaces.Potentiometer;
+import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.AnalogPotentiometer;
 
 
 public class Robot extends IterativeRobot {
@@ -32,6 +35,7 @@ public class Robot extends IterativeRobot {
 	public Ultrasonic rightsideultrasonic = new Ultrasonic(2,3);
 	public Ultrasonic leftsideultrasonic = new Ultrasonic(0,1);
 	public CameraServer camera;
+	public Potentiometer pot = new AnalogPotentiometer(0, 360, 30);
 	//}
 
 	//Drivetrain
@@ -55,9 +59,7 @@ public class Robot extends IterativeRobot {
 	//Shooting
 	//{
 	public Victor wheelOne = new Victor(8);
-	public Victor wheelTwo = new Victor(7);
-	public Victor wheelThree = new Victor(9);
-	public Victor wheelFour = new Victor(6);
+	public Victor wheelTwo = new Victor(6);
 
 	//}
 
@@ -88,11 +90,13 @@ public class Robot extends IterativeRobot {
 	public boolean pitchvalue;
 	public boolean ultradown;
 	public float largestZ;
-//	PIDController turnController;
+	//	PIDController turnController;
+
 	public void robotInit()
 	{
+		
 		pitch = navx.getPitch() *1000;
-	
+
 		//turnController = new PIDController(5.00, 1.0, 0.00020, 0, leftsideultrasonic, (PIDOutput) this);
 		//turnController.setInputRange(-180.0f, 180.0f);
 		//turnController.setOutputRange(-1.0f, 1.0f);
@@ -108,7 +112,7 @@ public class Robot extends IterativeRobot {
 		rultrasonic.setAutomaticMode(true);
 		rightsideultrasonic.setAutomaticMode(true);
 		leftsideultrasonic.setAutomaticMode(true);
-		
+
 
 		//Camera
 		{
@@ -129,7 +133,7 @@ public class Robot extends IterativeRobot {
 		} else {
 			// do right switch
 		}
-		
+
 		Switch[0] = new AutoStep(drivetrain, navx, lultrasonic, rultrasonic, leftsideultrasonic, this);
 		Switch[1] = new AutoStep(drivetrain, navx, lultrasonic, rultrasonic, leftsideultrasonic, this);
 		Switch[2] = new AutoStep(drivetrain, navx, lultrasonic, rultrasonic,leftsideultrasonic, this);
@@ -162,7 +166,7 @@ public class Robot extends IterativeRobot {
 		if((currentStep != 3)){
 			intake();
 		}
-		
+
 		if (currentStep < AutonomousUsing.length){
 			AutonomousUsing[currentStep].Update();
 			if (AutonomousUsing[currentStep].isDone) {
@@ -175,6 +179,8 @@ public class Robot extends IterativeRobot {
 	}
 
 	public void teleopInit() {
+		armOne.setSpeed(0);
+		armTwo.setSpeed(0);
 		drivetrain.SetCoast();
 		lultrasonic.setAutomaticMode(true);
 		rultrasonic.setAutomaticMode(true);
@@ -199,12 +205,17 @@ public class Robot extends IterativeRobot {
 		//SmartDashboard.putNumber("I: ", ((PIDInterface) leftsideultrasonic).getI());
 		//SmartDashboard.putNumber("D: ", ((PIDInterface) leftsideultrasonic).getD());
 		//SmartDashboard.putNumber("F: ", turnController.getF());
+		SmartDashboard.putNumber("Pot: ", pot.get());
+		if(xbox360Controller.getRawButton(7)){
+			armOne.setSpeed(.6);
+			armTwo.setSpeed(.6);
+		}
 
 		//System.out.println("NavxZ:" + navx.getRawGyroZ());
 		if(navx.getRawGyroZ() > largestZ){
 			largestZ = navx.getRawGyroZ();
 		}
-		
+
 		if(leftsideultrasonic.getRangeInches() < 3.2){
 			ultradown = true;
 		}else{
@@ -223,9 +234,9 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putBoolean("Ultrasonic Down", ultradown);
 		SmartDashboard.putNumber("Navx Z: ", navx.getRawGyroZ());
 		SmartDashboard.putNumber("Max Navx Z: ", largestZ);
-		
 
-		
+
+
 		if(pitch - navx.getPitch() < 0){
 			pitchvalue = false;
 		}else{
@@ -235,33 +246,22 @@ public class Robot extends IterativeRobot {
 		//System.out.println("Right Ultrasonic: "+ rultrasonic.getRangeInches());
 		//System.out.println("Right Side Ultrasonic: "+ rightsideultrasonic.getRangeInches());
 		//System.out.println("Left side Ultrasonic: "+ leftsideultrasonic.getRangeInches());
-		
+
 		if(operator.getRawButton(7)){
 			navx.reset();
 		}
-		
-		if (xbox360Controller.getRawButton(6)) {
-			armOne.set(SmartDashboard.getNumber("Forward Arm Speed ONE: ", forwardArmOneSpeed));
-			armTwo.set(SmartDashboard.getNumber("Forward Arm Speed TWO: ", forwardArmOneSpeed));
-		} else if (xbox360Controller.getRawButton(7)) {
-			armOne.set(SmartDashboard.getNumber("Backward Arm Speed ONE: ", backwardArmOneSpeed));
-			armTwo.set(SmartDashboard.getNumber("Backward Arm SpeedTWO: ", backwardArmOneSpeed));
-		} else {
-			armOne.set(0);
-			armTwo.set(0);
-		}
-		
+
 		if(debug.getRawButton(8)){
 			//turnController.setP(SmartDashboard.getNumber("P: ", turnController.getP()));
 			//turnController.setI(SmartDashboard.getNumber("I: ", turnController.getI()));
 			//turnController.setD(SmartDashboard.getNumber("D: ", turnController.getD()));
 			//turnController.setF(SmartDashboard.getNumber("F: ", turnController.getF()));
 			speedo = (float) SmartDashboard.getNumber("Speed: ", 0.2f);
+
 		}
-		
+
 		//operator controls
-		{
-			
+		{	
 			if(operator.getRawButton(1)){
 				intake();
 				intakeMoving = true;
@@ -275,12 +275,19 @@ public class Robot extends IterativeRobot {
 			}else if(operator.getRawAxis(3) > .1){
 				flapper1.set(DoubleSolenoid.Value.kReverse);
 				flapper2.set(DoubleSolenoid.Value.kReverse);
-				intakeMoving =true;
-				shoot();
+				armChange(130);
+				//Scale
+			}else if(operator.getRawAxis(2) > .1){
+				flapper1.set(DoubleSolenoid.Value.kReverse);
+				flapper2.set(DoubleSolenoid.Value.kReverse);
+				armChange(383);
+				//switch
+			
 			}else if(operator.getRawButton(2)){
 				intake();
 				intakeMoving = true;
 			}else{
+				LogInfo("ARM STATIC");
 				intakeMoving = false;
 				flapper1.set(DoubleSolenoid.Value.kReverse);
 				flapper2.set(DoubleSolenoid.Value.kReverse);
@@ -289,18 +296,17 @@ public class Robot extends IterativeRobot {
 				flapper1.set(DoubleSolenoid.Value.kForward);
 				flapper2.set(DoubleSolenoid.Value.kForward);
 			}
+
 			if(intakeMoving = false){
 				wheelOne.set(0);
 				wheelTwo.set(0);
-				wheelThree.set(0);
-				wheelFour.set(0);
 			}
 		}
-		
 
-			
-			
-			/*
+
+
+
+		/*
 			if (On=true){
 				if (lultrasonic.getRangeInches()==0 && rultrasonic.getRangeInches()==0){
 					isOff();
@@ -313,7 +319,7 @@ public class Robot extends IterativeRobot {
 				wheelTwo.set(0);	
 
 			}
-			 */
+		 */
 		//}
 	}
 
@@ -324,9 +330,9 @@ public class Robot extends IterativeRobot {
 		drivetrain.SetLeftSpeed(lerpSpeed);
 		drivetrain.SetRightSpeed(lerpSpeed);
 		flapper1.set(DoubleSolenoid.Value.kOff);
-		
 
-		
+
+
 		SmartDashboard.putNumber("Speed: ", speedo);
 	}
 	public void testPeriodic() {
@@ -343,7 +349,9 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("NavX: ", navx.getYaw());
 		SmartDashboard.putNumber("Left Ultrasonic: ", lultrasonic.getRangeInches());
 		SmartDashboard.putNumber("Right Ultrasonic: ", rultrasonic.getRangeInches());
-	
+		SmartDashboard.putNumber("Pot: ", pot.get());
+
+
 	}
 
 	public void UpdateMotors() {
@@ -380,15 +388,12 @@ public class Robot extends IterativeRobot {
 		float wheelspeed = .8f;
 		wheelOne.set(-wheelspeed);
 		wheelTwo.set(wheelspeed);
-		wheelThree.set(-wheelspeed);
-		wheelFour.set(wheelspeed);
+
 	}
 	public void outtake(){
 		float wheelspeed = .99f;
 		wheelOne.set(wheelspeed);
 		wheelTwo.set(-wheelspeed);
-		wheelThree.set(wheelspeed);
-		wheelFour.set(-wheelspeed);
 
 	}
 	public void shoot(){
@@ -396,8 +401,6 @@ public class Robot extends IterativeRobot {
 		float wheelspeed = 0.5f;
 		wheelOne.set(wheelspeed);
 		wheelTwo.set(-wheelspeed);
-		wheelThree.set(wheelspeed);
-		wheelFour.set(-wheelspeed);
 
 
 	}
@@ -410,5 +413,22 @@ public class Robot extends IterativeRobot {
 		On = false;
 		Off = true;
 	}
-
+	public void armChange(int targetValue){
+		if (pot.get() < targetValue) {
+			intakeMoving =true;
+			LogInfo("SHOOT");
+			//shoot();
+			armOne.setSpeed(.2);
+			armTwo.setSpeed(.2);
+		} else if (pot.get() >= targetValue){
+			LogInfo("GOING UP");
+			armOne.setSpeed(.6);
+			armTwo.setSpeed(.6);
+		} else {
+			LogInfo("OUT OF RANGE");
+			intakeMoving = false;
+			armOne.setSpeed(0);
+			armTwo.setSpeed(0);
+		}
+	}
 }
