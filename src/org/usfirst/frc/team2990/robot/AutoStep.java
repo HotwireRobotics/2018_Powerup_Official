@@ -166,7 +166,7 @@ public class AutoStep {
 				drivetrain.SetRightSpeed(-speed);
 				drivetrain.SetLeftSpeed(speed);
 				if(pushtime.get() >= .3f){
-					robot.shoot();
+					robot.shoot(.5f);
 				}
 			}else{
 				isDone = true;
