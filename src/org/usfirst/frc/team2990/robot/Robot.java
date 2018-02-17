@@ -37,7 +37,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	public Ultrasonic leftIultrasonic = new Ultrasonic(6, 7);
 	public Ultrasonic rightIultrasonic = new Ultrasonic(8, 9);
 	public CameraServer camera;
-	public Potentiometer pot = new AnalogPotentiometer(0, 10, 0);
+	public Potentiometer pot = new AnalogPotentiometer(0, 1, 0);
 	// }
 
 	// Drivetrain
@@ -49,7 +49,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	// {
 	public DoubleSolenoid flapper1 = new DoubleSolenoid(0, 1);
 	public DoubleSolenoid flapper2 = new DoubleSolenoid(2, 3);
-	public DoubleSolenoid piston = new DoubleSolenoid(4,5);
+	public DoubleSolenoid cubeHolder = new DoubleSolenoid(4, 5);
 	// }
 
 	// Joysticks
@@ -75,12 +75,30 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	public boolean Off;
 	public boolean intakeMoving;
 	public boolean ultraTrigger;
+	public Timer Timer = new Timer();
+	public int delayShoot = 0;
 	// arm
 	public float forwardArmOneSpeed = .4f;
 	public float backwardArmOneSpeed = -.2f;
 	public Talon armOne = new Talon(4);
 	public Talon armTwo = new Talon(5);
 	public float potTarget;
+	public boolean armMove;
+	public boolean ultraToggle;
+
+	public float SwitchP = 11f;
+	public float SwitchI= .5f;
+	public float SwitchD = 0f;
+	public float SwitchF = 0f;
+	public float SwitchTarget = 0.575f;
+
+	public float ScaleP = 19.0f;
+	public float ScaleI= 0.25f;
+	public float ScaleD = 0f;
+	public float ScaleF = 0f;
+	public float ScaleTarget = 0.51f;
+
+	public boolean doPidArmControl = true;
 
 
 	// }
@@ -99,12 +117,13 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	public float largestZ;
 	PIDController armController;
 
+	public double potVal;
 
 	public void robotInit() {
 
 		pitch = navx.getPitch() * 1000;
 
-		armController = new PIDController(2.0, 0.07, 0.1, 0, pot, this);
+		armController = new PIDController(6.5f, 0.3, 7.0, 0, pot, this);
 		//armController.setInputRange(3.0f, 10.0f);
 		//armController.setOutputRange(-0.5f, 0.5f);
 		armController.setAbsoluteTolerance(1000);
@@ -127,6 +146,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			usbCam.setFPS(30);
 		}
 		largestZ = 0;
+
+
 	}
 
 	public void autonomousInit() {
@@ -182,11 +203,10 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	}
 
 	public void teleopInit() {
-
+		armMove = false;
+		armController.disable();
 		debug = new Joystick(3);
 
-		armOne.setSpeed(0);
-		armTwo.setSpeed(0);
 		drivetrain.SetCoast();
 		lultrasonic.setAutomaticMode(true);
 		rultrasonic.setAutomaticMode(true);
@@ -199,25 +219,20 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		float lerpSpeed = 0.5f;
 		drivetrain.SetLeftSpeed(lerpSpeed);
 		drivetrain.SetRightSpeed(lerpSpeed);
+		SmartDashboard.putNumber("Switch P: ", SwitchP);
+		SmartDashboard.putNumber("Switch I: ", SwitchI);
+		SmartDashboard.putNumber("Switch D: ", SwitchD);
+		SmartDashboard.putNumber("Switch F: ", SwitchF);
+		SmartDashboard.putNumber("Scale P: ", ScaleP);
+		SmartDashboard.putNumber("Scale I: ", ScaleI);
+		SmartDashboard.putNumber("Scale D: ", ScaleD);
+		SmartDashboard.putNumber("Scale F: ", ScaleF);
 	}
 
 	public void teleopPeriodic() {
-		SmartDashboard.putNumber("Arm P:", armController.getP());
-		SmartDashboard.putNumber("Arm I:", armController.getI());
-		SmartDashboard.putNumber("Arm D:", armController.getD());
-		SmartDashboard.putNumber("Arm F:", armController.getF());
-		// LogInfo("Ultrasonic: " + ultrasonic.getRangeInches());
-		// LogInfo("Navx: " + navx.getYaw());
-		// leftsideultrasonic).getP());
-		// leftsideultrasonic).getI());
-		// leftsideultrasonic).getD());
-		SmartDashboard.putNumber("Pot: ", pot.get());
-		if (xbox360Controller.getRawButton(7)) {
-			armOne.setSpeed(1.0f);
-			armTwo.setSpeed(1.0f);
-		}
 
-		// System.out.println("NavxZ:" + navx.getRawGyroZ());
+		SmartDashboard.putNumber("Pot value: ", pot.get());
+
 		if (navx.getRawGyroZ() > largestZ) {
 			largestZ = navx.getRawGyroZ();
 		}
@@ -235,10 +250,11 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		SmartDashboard.putNumber("Front Ultrasonic: ", lultrasonic.getRangeInches());
 		SmartDashboard.putNumber("Right Side Ultrasonic: ", rightsideultrasonic.getRangeInches());
 		SmartDashboard.putNumber("Left Side Ultrasonic: ", leftsideultrasonic.getRangeInches());
-		SmartDashboard.putNumber("Yaw:", navx.getYaw());
+		SmartDashboard.putNumber("Yaw: ", navx.getYaw());
 		SmartDashboard.putBoolean("Ultrasonic Down", ultradown);
 		SmartDashboard.putNumber("Right Intake Ultrasonic: ", rightIultrasonic.getRangeInches());
 		SmartDashboard.putNumber("Left Intake Ultrasonic: ", leftIultrasonic.getRangeInches());
+		SmartDashboard.putNumber("Pot: ", pot.get());
 
 		if (pitch - navx.getPitch() < 0) {
 			pitchvalue = false;
@@ -266,9 +282,9 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		} else if (xbox360Controller.getRawButton(7)) {
 			armOne.set(SmartDashboard.getNumber("Backward Arm Speed ONE: ", backwardArmOneSpeed));
 			armTwo.set(SmartDashboard.getNumber("Backward Arm SpeedTWO: ", backwardArmOneSpeed));
+			armMove = false;
 		} else {
-			armOne.set(0);
-			armTwo.set(0);
+			armMove = false;
 		}
 
 		if (debug.getRawButton(8)) {
@@ -286,10 +302,11 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 		// operator controls
 
-
+		if (delayShoot == 0) {
+			Timer.start();
+		}
 		if (operator.getRawButton(1)) {
 			intake();
-			piston.set(DoubleSolenoid.Value.kForward);
 			intakeMoving = true;
 			flapper1.set(DoubleSolenoid.Value.kForward);
 			flapper2.set(DoubleSolenoid.Value.kForward);
@@ -298,20 +315,34 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			ultraTrigger = false;
 			outtake();
 			intakeMoving = true;
-		} else if (operator.getRawAxis(3) > .1) {
+		} else if (operator.getPOV() > 180 && operator.getPOV() < 359) {
 			flapper1.set(DoubleSolenoid.Value.kReverse);
 			flapper2.set(DoubleSolenoid.Value.kReverse);
 			intakeMoving = true;
 			ultraTrigger = false;
+
 			shoot(1);
-			armChange(130);
 			// Scale
-		} else if (operator.getRawAxis(2) > .1) {
-			ultraTrigger = false;
-			flapper1.set(DoubleSolenoid.Value.kReverse);
-			flapper2.set(DoubleSolenoid.Value.kReverse);
-			armChange(379);
-			// switch
+		} else if (operator.getPOV() > 5 && operator.getPOV() < 175) {
+			if (Timer.get() >= 1) {
+				flapper1.set(DoubleSolenoid.Value.kReverse);
+				flapper2.set(DoubleSolenoid.Value.kReverse);
+				ultraTrigger = false;
+				
+				LogInfo("firing");
+			} else {
+				ultraTrigger = false;
+				flapper1.set(DoubleSolenoid.Value.kForward);
+				flapper2.set(DoubleSolenoid.Value.kForward);
+				delayShoot++;
+				LogInfo("reving");
+			}
+			if (Timer.get() >= .25) {
+				outtake();
+				intakeMoving = true;
+				LogInfo("outtake");
+			}
+			// scale
 		} else if (operator.getRawButton(2)) {
 			intake();
 			intakeMoving = true;
@@ -319,41 +350,76 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			shoot(1);
 			intakeMoving = true;
 			ultraTrigger = false;
-		}else if(operator.getRawButton(5)){
-			flapper1.set(DoubleSolenoid.Value.kReverse);
-			flapper2.set(DoubleSolenoid.Value.kReverse);
-		} else {
+		}else if(operator.getRawButton(3)){
+			flapper1.set(DoubleSolenoid.Value.kForward);
+			flapper2.set(DoubleSolenoid.Value.kForward);
+		}else{
 			//LogInfo("ARM STATIC");
 			intakeMoving = false;
 			flapper1.set(DoubleSolenoid.Value.kReverse);
 			flapper2.set(DoubleSolenoid.Value.kReverse);
 			wheelOne.set(0);
 			wheelTwo.set(0);
-			piston.set(DoubleSolenoid.Value.kForward);
+			delayShoot = 0;
+			Timer.stop();
+			Timer.reset();
 			//wheelThree.set(0);
 			//wheelFour.set(0);
 		}
 
-		if (intakeMoving = false) {
+		//if(operator.getRawButton(7) && ultraToggle == true){
+		//ultraToggle= false;
+		//}else if(operator.getRawButton(7) && ultraToggle == false){
+		//ultraToggle = true;
+		//}
+		if(operator.getRawButton(5)){
+			//switch
+			//if (pot.get() > )
+			armController.setP(SmartDashboard.getNumber("Switch P: ", SwitchP));
+			armController.setI(SmartDashboard.getNumber("Switch I: ", SwitchI));
+			armController.setD(SmartDashboard.getNumber("Switch D: ", SwitchD));
+			armController.setF(SmartDashboard.getNumber("Switch F: ", SwitchF));
+			armMove = true;
+			armController.setSetpoint(SwitchTarget);
+		}else if(operator.getRawButton(6)){
+			//Scale
+			ArmDoScale();
+		}else{
+			armMove = false;
+			cubeHolder.set(DoubleSolenoid.Value.kReverse);
+		}
+
+		
+
+		if(armMove == true){
+			armController.enable();
+		}else if(armMove == false){
+			armController.disable();
+			armController.reset();
+		}
+		if (intakeMoving == false) {
 			wheelOne.set(0);
 			wheelTwo.set(0);
-			piston.set(DoubleSolenoid.Value.kForward);
 			//	wheelThree.set(0);
 			//wheelFour.set(0);
+		}else{
+			//
 		}
 		if (ultraTrigger == true) {
-			if (rightIultrasonic.getRangeInches() >= 5f || leftIultrasonic.getRangeInches() >= 5f) {
-				//
+			if (rightIultrasonic.getRangeInches() >= 3f || leftIultrasonic.getRangeInches() >= 3f) {
+				if(ultraToggle == true){
+					intake();
+				}
 			} else {
-				wheelOne.set(0);
-				wheelTwo.set(0);
-				piston.set(DoubleSolenoid.Value.kForward);
+				//wheelOne.set(0.3f);
+				//wheelTwo.set(0.3f);
 				//wheelThree.set(0);
 				//wheelFour.set(0);
 			}
 		} else {
 			intakeMoving = false;
 		}
+	
 	}
 
 	public void testInit() {
@@ -364,23 +430,29 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		drivetrain.SetLeftSpeed(lerpSpeed);
 		drivetrain.SetRightSpeed(lerpSpeed);
 		flapper1.set(DoubleSolenoid.Value.kOff);
+
 		SmartDashboard.putNumber("Pot Target", potTarget);
-		SmartDashboard.putNumber("Arm P:", armController.getP());
-		SmartDashboard.putNumber("Arm I:", armController.getI());
-		SmartDashboard.putNumber("Arm D:", armController.getD());
-		SmartDashboard.putNumber("Arm F:", armController.getF());
+		SmartDashboard.putNumber("Switch P: ", SwitchP);
+		SmartDashboard.putNumber("Switch I: ", SwitchI);
+		SmartDashboard.putNumber("Switch D: ", SwitchD);
+		SmartDashboard.putNumber("Switch F: ", SwitchF);
+		SmartDashboard.putNumber("Scale P: ", ScaleP);
+		SmartDashboard.putNumber("Scale I: ", ScaleI);
+		SmartDashboard.putNumber("Scale D: ", ScaleD);
+		SmartDashboard.putNumber("Scale F: ", ScaleF);
 
 	}
 
 	public void testPeriodic() {
-		SmartDashboard.putNumber("Pot value:", pot.get());
-		potTarget = (float) SmartDashboard.getNumber("Pot Target", potTarget);
-		armController.setP(SmartDashboard.getNumber("Arm P:", armController.getP()));
-		armController.setI(SmartDashboard.getNumber("Arm I:", armController.getI()));
-		armController.setD(SmartDashboard.getNumber("Arm D:", armController.getD()));
-		SmartDashboard.putNumber("Arm F:", armController.getF());
 
-		SmartDashboard.putBoolean("PID On Target", armController.onTarget());	
+		double smoothing = 0.5f;
+		potVal = (smoothing * pot.get()) + ((1 - smoothing) * potVal);
+		SmartDashboard.putNumber("Pot value: ", potVal);
+
+		potTarget = (float) SmartDashboard.getNumber("Pot Target", potTarget);
+
+		SmartDashboard.putBoolean("PID On Target", armController.onTarget());
+
 		/*
 		if (xbox360Controller.getRawButton(4)) {
 			drivetrain.DriveStraight(speedo, false);
@@ -398,31 +470,70 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		 */
 		//LogInfo("Pot Value" + potTarget);
 
-		if (debug.getRawButton(1)) {
-			intake();
+		if (debug.getRawButton(5)) {
+			//intake();
 		} else {
-			wheelOne.set(0);
-			wheelTwo.set(0);
+			//wheelOne.set(0);
+			//wheelTwo.set(0);
 		}
 
 
 		if (debug.getRawButton(2)) {
-			flapper1.set(DoubleSolenoid.Value.kForward);
-			flapper2.set(DoubleSolenoid.Value.kForward);
+			//flapper1.set(DoubleSolenoid.Value.kForward);
+			//flapper2.set(DoubleSolenoid.Value.kForward);
 		} else {
-			flapper1.set(DoubleSolenoid.Value.kReverse);
-			flapper2.set(DoubleSolenoid.Value.kReverse);
+			//flapper1.set(DoubleSolenoid.Value.kReverse);
+			//flapper2.set(DoubleSolenoid.Value.kReverse);
 		}
 
-		armController.setSetpoint(potTarget);
-		if(debug.getRawButton(8)){
-			//LogInfo("In here");
+		if(debug.getRawButton(5)){
+			//switch
+			armController.setP(SmartDashboard.getNumber("Switch P: ", SwitchP));
+			armController.setI(SmartDashboard.getNumber("Switch I: ", SwitchI));
+			armController.setD(SmartDashboard.getNumber("Switch D: ", SwitchD));
+			armController.setF(SmartDashboard.getNumber("Switch F: ", SwitchF));
+			armController.setSetpoint(SwitchTarget);
 			armController.enable();
-		}else{
+			doPidArmControl = true;
+
+		}else if(debug.getRawButton(6)){
+			//Scale
+			armController.setP(SmartDashboard.getNumber("Scale P: ", ScaleP));
+			armController.setI(SmartDashboard.getNumber("Scale I: ", ScaleI));
+			armController.setD(SmartDashboard.getNumber("Scale D: ", ScaleD));
+			armController.setF(SmartDashboard.getNumber("Scale F: ", ScaleF));
+
+			ArmDoScale();
+
+		} else {
 			armController.disable();
-			wheelOne.set(0);
-			wheelTwo.set(0);
+			armController.reset();
+			doPidArmControl = true;
 		}
+
+		if (debug.getRawButton(1)) {
+			armController.reset();
+		}
+	}
+
+	public void ArmDoScale()
+	{
+		
+		if (pot.get() > 0.55) {
+			doPidArmControl = false;
+			armOne.set(0.5);
+			armTwo.set(0.5);
+			LogInfo("Steady Power to Scale");
+			armController.disable();
+		} else {
+			doPidArmControl = true;
+			armController.enable();
+			armController.setSetpoint(ScaleTarget);
+			LogInfo("Ready to Shoot");
+			armMove = true;
+			cubeHolder.set(DoubleSolenoid.Value.kForward);
+		}
+		
 	}
 
 	public void UpdateMotors() {
@@ -455,11 +566,13 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	}
 
 	public void intake() {
-		float wheelspeed = .6f;
+		float wheelspeed = 0.6f;
 		wheelOne.set(wheelspeed);
 		wheelTwo.set(-wheelspeed);
 		//wheelThree.set(wheelspeed);
 		//wheelFour.set(wheelspeed);
+
+
 
 	}
 
@@ -467,7 +580,6 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		float wheelspeed = 1f;
 		wheelOne.set(-wheelspeed);
 		wheelTwo.set(wheelspeed);
-		piston.set(DoubleSolenoid.Value.kReverse);
 		//wheelThree.set(-wheelspeed);
 		//wheelFour.set(-wheelspeed);
 
@@ -494,31 +606,17 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		Off = true;
 	}
 
-	public void armChange(int targetValue) {
-		if (pot.get() < targetValue) {
-			intakeMoving = true;
-			//LogInfo("SHOOT");
-			shoot(1);
-			armOne.setSpeed(.35);
-			armTwo.setSpeed(.35);
-		} else if (pot.get() >= targetValue) {
-			//LogInfo("GOING UP");
-			armOne.setSpeed(.6);
-			armTwo.setSpeed(.6);
 
-		} else {
-			//LogInfo("OUT OF RANGE");
-			intakeMoving = false;
-			armOne.setSpeed(0);
-			armTwo.setSpeed(0);
-		}
-	}
+
 
 	@Override
 	public void pidWrite(double output) {
-		double invertedOutput = -output;
-		armOne.set(invertedOutput);
-		armTwo.set(invertedOutput);
-		SmartDashboard.putNumber("PID Output:", invertedOutput);
+		if (doPidArmControl)
+		{
+			armOne.set(-output);
+			armTwo.set(-output);
+			SmartDashboard.putNumber("PID Output: ", -output);
+			LogInfo("PIDWrite is running");
+		}
 	}
 }
