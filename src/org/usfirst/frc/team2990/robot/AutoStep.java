@@ -2,12 +2,13 @@ package org.usfirst.frc.team2990.robot;
 
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.Ultrasonic;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Timer;
 
 public class AutoStep {
 	public enum StepType {
-		RotateLeft, RotateRight, Forward, UltrasonicTarget, AlignUltrasonicLeft, LeftTurnSide, NavxReset, Push, RightTurnSide, WallTrackLeft, WallTrackRight
+		RotateLeft, RotateRight, Forward, UltrasonicTarget, AlignUltrasonicLeft, LeftTurnSide, NavxReset, Push, RightTurnSide, WallTrackLeft, WallTrackRight, ShootInSwitch, End
 	}
 
 	public StepType type;
@@ -94,6 +95,10 @@ public class AutoStep {
 		this.speed = sped;
 		type = StepType.WallTrackLeft;
 	}
+	public void ShootInSwitch(){
+
+		type = StepType.ShootInSwitch;
+	}
 
 	public void Update() {
 		LogInfo("NavX: " + navx.getYaw());
@@ -105,6 +110,7 @@ public class AutoStep {
 			if (navx.getYaw() < rotateTarget - adjustment) {
 				drivetrain.SetLeftSpeed(speed);
 				drivetrain.SetRightSpeed(speed);
+
 			} else {
 				isDone = true;
 			}
@@ -113,7 +119,6 @@ public class AutoStep {
 			if (navx.getYaw() > rotateTarget + adjustment) {
 				drivetrain.SetLeftSpeed(-speed);
 				drivetrain.SetRightSpeed(-speed);
-				
 			} else {
 				isDone = true;
 			}
@@ -128,6 +133,7 @@ public class AutoStep {
 		if (type == StepType.UltrasonicTarget) {
 			if (lultrasonic.getRangeInches() > ultrasonicTarget) {
 				drivetrain.DriveStraight(speed, false);
+				robot.ArmGoHigh();
 			} else {
 				isDone = true;
 			}
@@ -142,6 +148,7 @@ public class AutoStep {
 		if(type == StepType.LeftTurnSide){
 			if((Math.abs(navx.getYaw()) < rotateTarget)){
 				drivetrain.SetLeftSpeed(speed);
+				robot.ArmGoHigh();
 			}else{
 				isDone= true;
 			}
@@ -149,6 +156,7 @@ public class AutoStep {
 		if(type == StepType.RightTurnSide){
 			if((Math.abs(navx.getYaw()) < rotateTarget)){
 				drivetrain.SetRightSpeed(-speed);
+				robot.ArmGoHigh();
 			}else{
 				isDone= true;
 			}
@@ -156,17 +164,23 @@ public class AutoStep {
 		if(type == StepType.NavxReset){
 			if(navxTime.get() > timecap){
 				navxTime.stop();
+				robot.pancake.set(DoubleSolenoid.Value.kForward);
 				isDone = true;
+			} else {
+				robot.ArmDoScale();
 			}
 		}
 		if(type == StepType.Push){
+			robot.pancake.set(DoubleSolenoid.Value.kReverse);
+			robot.ArmDoSwitch();
 			System.out.println("Pushtime: " + pushtime.get());
 			System.out.println("TimeCap:" + timecap);
 			if(pushtime.get() < timecap){
 				drivetrain.SetRightSpeed(-speed);
 				drivetrain.SetLeftSpeed(speed);
 				if(pushtime.get() >= .3f){
-					robot.shoot(.5f);
+					robot.outtake();
+					robot.ArmDoSwitch();
 				}
 			}else{
 				isDone = true;
@@ -184,18 +198,21 @@ public class AutoStep {
 				isDone = true;
 			}
 		}
+		if(type == StepType.ShootInSwitch){
+			robot.outtake();
+		}
 	}
 
 
-public void InitStep()
-{
-	navx.reset();
-	navxTime.start();
-	pushtime.start();
-}
+	public void InitStep()
+	{
+		navx.reset();
+		navxTime.start();
+		pushtime.start();
+	}
 
-public void LogInfo(String info) {
-	System.out.println(info + ";    ");
-}
+	public void LogInfo(String info) {
+		System.out.println(info + ";    ");
+	}
 
 }
