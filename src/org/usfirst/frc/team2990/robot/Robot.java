@@ -105,6 +105,11 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	public float ScaleTarget = 0.495f;
 	public float HighTarget = .47f;
 
+	public float AutoP = 14.0f;
+	public float AutoI= 0.35f;
+	public float AutoD = 0.15f;
+	public float AutoF = 0f;	
+
 	public float HoldP = 1.0f;
 	public float HoldI = 0.0f;
 	public float HoldD = 0.0f;
@@ -119,7 +124,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	// Auto
 	// {
 	public AutoStep step = new AutoStep(drivetrain, navx, lultrasonic, rultrasonic, leftsideultrasonic, this);
-	public AutoStep[] Switch = new AutoStep[4];
+	public AutoStep[] Switch = new AutoStep[6];
 	public AutoStep[] Scale = new AutoStep[1];
 	public AutoStep[] AutonomousUsing;
 	public int currentStep = 0;
@@ -129,7 +134,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	public boolean ultradown;
 	public float largestZ;
 	PIDController armController;
-
+	String gameColors = DriverStation.getInstance().getGameSpecificMessage();
 	public double potVal;
 
 	public void robotInit() {
@@ -165,31 +170,40 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 	public void autonomousInit() {
 		drivetrain.SetBreak();
-		String gameColors = DriverStation.getInstance().getGameSpecificMessage();
+	
 		if (gameColors.charAt(0) == 'L') {
 			// do left switch
 		} else {
 			// do right switch
 		}
 
+		// switch auto
 		Switch[0] = new AutoStep(drivetrain, navx, lultrasonic, rultrasonic, leftsideultrasonic, this);
 		Switch[1] = new AutoStep(drivetrain, navx, lultrasonic, rultrasonic, leftsideultrasonic, this);
 		Switch[2] = new AutoStep(drivetrain, navx, lultrasonic, rultrasonic, leftsideultrasonic, this);
 		Switch[3] = new AutoStep(drivetrain, navx, lultrasonic, rultrasonic, leftsideultrasonic, this);
+		Switch[4] = new AutoStep(drivetrain, navx, lultrasonic, rultrasonic, leftsideultrasonic, this);
+		Switch[5] = new AutoStep(drivetrain, navx, lultrasonic, rultrasonic, leftsideultrasonic, this);
+		
 		Switch[0].NavxReset(.06f);
-		Scale[0] = new AutoStep(drivetrain, navx, lultrasonic, rultrasonic, leftsideultrasonic, this);
-		if (gameColors.charAt(0) == 'L') {
-			Switch[1].RightTurnSide(12f, 1f);
-		} else {
-			Switch[1].LeftTurnSide(5f, 1f);
-		}
-
-		Switch[2].UltrasonicTarget(35f, .8f);
-		Switch[3].Push(1f, .4f);
-		currentStep = 0;
 		Switch[0].InitStep();
+		
+		if (gameColors.charAt(0) == 'L') {
+			Switch[1].RightTurnSide(10f, 1f);
+		} else {
+			Switch[1].LeftTurnSide(7f, 1f);
+		}
+		Switch[2].UltrasonicTarget(28f, 0.5f);
+		Switch[3].Push(1f, .4f);
+		//Switch[4].Backup(1f, 0.6f, 15f);
+		//Switch[5].Straighten(0.6f);
+		
+		// scale auto
+		Scale[0] = new AutoStep(drivetrain, navx, lultrasonic, rultrasonic, leftsideultrasonic, this);
 		Scale[0].WallTrackLeft(0.3f);
+		
 		AutonomousUsing = Switch;
+		currentStep = 0;
 	}
 
 	public void autonomousPeriodic() {
@@ -210,16 +224,17 @@ public class Robot extends IterativeRobot implements PIDOutput {
 				}
 			}
 		}
-		
-		if( AutonomousUsing == Switch && currentStep > 3){
+
+		if( AutonomousUsing == Switch && currentStep > 6){
 			wheelOne.set(0);
 			wheelTwo.set(0);
 		}
-		
+
 		UpdateMotors();
 	}
 
 	public void teleopInit() {
+		//DriveTrain.Speed = 0;
 		armMove = false;
 		armController.disable();
 		debug = new Joystick(3);
@@ -533,7 +548,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			armController.setSetpoint(ScaleTarget);
 			LogInfo("Ready to Shoot");
 			armMove = true;
-			
+
 		}
 
 	}
@@ -543,6 +558,16 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		armController.setD(SwitchD);
 
 		armController.setSetpoint(SwitchTarget);
+		armController.enable();
+		doPidArmControl = true;
+
+	}
+	public void ArmDoSwitchAuto() {
+		armController.setP(AutoP);
+		armController.setI(AutoI);
+		armController.setD(AutoD);
+
+		armController.setSetpoint(SwitchTarget -.05);
 		armController.enable();
 		doPidArmControl = true;
 
@@ -633,7 +658,6 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			armOne.set(-output);
 			armTwo.set(-output);
 			SmartDashboard.putNumber("PID Output: ", -output);
-			LogInfo("PIDWrite is running");
 		}
 	}
 }
