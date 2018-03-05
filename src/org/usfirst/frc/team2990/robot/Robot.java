@@ -7,12 +7,12 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.PIDInterface;
 import edu.wpi.first.wpilibj.PIDOutput;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.CameraServer;
+import edu.wpi.first.wpilibj.Compressor;
 
 import javax.sound.midi.ControllerEventListener;
 
@@ -50,7 +50,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 	// neumatics
 	// {
-	public DoubleSolenoid flapper = new DoubleSolenoid(3,2);
+	public DoubleSolenoid flapper = new DoubleSolenoid(0,1);
 	public DoubleSolenoid pancake = new DoubleSolenoid(5,4);
 	
 	// }
@@ -98,11 +98,11 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	public float SwitchF = 0f;
 	public float SwitchTarget = 0.65f;
 
-	public double ScaleP = 9f;
-	public double ScaleI= 0.1f;
+	public double ScaleP = 0.0f;
+	public double ScaleI= 0.0f;
 	public double ScaleD = 0.0f;
-	public float ScaleF = 0f;
-	public float ScaleTarget = 0.580f;
+	public float ScaleF = 5f;
+	public float ScaleTarget = 0.56f;
 	public float HighTarget = .47f;
 
 	public float AutoP = 6.0f;
@@ -273,6 +273,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		SmartDashboard.putNumber("Scale P", ScaleP);
 		SmartDashboard.putNumber("Scale I", ScaleI);
 		SmartDashboard.putNumber("Scale D", ScaleD); 
+		SmartDashboard.putNumber("Scale F", ScaleF);
 		
 		SmartDashboard.putNumber("Switch P", SwitchP);
 		SmartDashboard.putNumber("Switch I", SwitchI);
@@ -575,20 +576,21 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		armController.setP(ScaleP);
 		armController.setI(ScaleI);
 		armController.setD(ScaleD);
+		armController.setF(ScaleF);
 			
-		if (pot.get() > 0.68f) {
+		if (pot.get() > 0.6f) {
 			doPidArmControl = false;
-			armOne.set(0.6);
-			armTwo.set(0.6);
-			LogInfo("Steady Power to Scale");
+			armOne.set(0.7);
+			armTwo.set(0.7);
 			armController.disable();
+			SmartDashboard.putString("Scale power: ", "70% Power");
+			//TODO
 		} else {
-			doPidArmControl = true;
-			armController.enable();
-			armController.setSetpoint(ScaleTarget);
-			LogInfo("Ready to Shoot");
-			armMove = true;
-
+			doPidArmControl = false;
+			armOne.set(0.35);
+			armTwo.set(0.35);
+			armController.disable();
+			SmartDashboard.putString("Scale power: ", "35% Power");
 		}
 
 	}
