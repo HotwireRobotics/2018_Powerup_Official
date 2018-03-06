@@ -9,7 +9,7 @@ import edu.wpi.first.wpilibj.Timer;
 
 public class AutoStep {
 	public enum StepType {
-		RotateLeft, RotateRight, Forward, UltrasonicTarget, AlignUltrasonicLeft, LeftTurnSide, NavxReset, Push, RightTurnSide, WallTrackLeft, WallTrackRight, ShootInSwitch, Backup, Straighten, TimedForward
+		RotateLeft, RotateRight, Forward, UltrasonicTarget, AlignUltrasonicLeft, LeftTurnSide, NavxReset, Push, RightTurnSide, WallTrackLeft, WallTrackRight, ShootInSwitch, Backup, Straighten, TimedForward, RobotTurn
 	}
 
 	public StepType type;
@@ -30,6 +30,8 @@ public class AutoStep {
 	public Timer forwardTime;
 	public float timecap;
 	public Robot robot;
+	private float rotateTargetLeft;
+	private float rotateTargetRight;
 	public AutoStep(DriveTrain choochoo, AHRS gyro, Ultrasonic lsonar, Robot robot) {
 		drivetrain = choochoo;
 		navx = gyro;
@@ -114,6 +116,13 @@ public class AutoStep {
 		this.speed = sped;
 		timecap = time;
 		type = StepType.TimedForward;
+
+	}
+	public void RobotTurn(float sped, float degLeft, float degRight){
+		this.speed = sped;
+		rotateTargetLeft = degLeft;
+		rotateTargetRight = degRight;
+		
 	}
 
 	public void Update() {
@@ -198,6 +207,7 @@ public class AutoStep {
 				isDone = true;
 			} else {
 				navx.reset();
+				robot.gameMessage = DriverStation.getInstance().getGameSpecificMessage();
 			}
 		}
 		if(type == StepType.Push){
@@ -239,35 +249,37 @@ public class AutoStep {
 				drivetrain.SetBothSpeed(speed);
 			}
 		}
-		if(type == StepType.Straighten){
-			/*if(robot.gameColors.charAt(0) == 'L'){
-				if(navx.getYaw() < 0){
-					drivetrain.SetRightSpeed(speed);
+		if(type == StepType.RobotTurn){
+			if(DriverStation.getInstance().getGameSpecificMessage().charAt(0) == 'L'){
+				if((Math.abs(navx.getYaw()) < rotateTargetLeft)){
+					drivetrain.SetRightSpeed(-speed);
+					robot.ArmGoHigh();
 				}else{
-					drivetrain.SetRightSpeed(0);
-					isDone = true;
+					robot.armController.reset();
+					isDone= true;	
 				}
-			}else if(robot.gameColors.charAt(0) == 'R'){
-				if(navx.getYaw() > 0){
-					drivetrain.SetLeftSpeed(-speed);
+			}else{
+				if((Math.abs(navx.getYaw()) < rotateTargetRight)){
+					drivetrain.SetLeftSpeed(speed);
+					robot.ArmGoHigh();
 				}else{
-					drivetrain.SetLeftSpeed(0);
-					isDone = true;
+					isDone= true;
+					robot.armController.reset();
 				}
-			}*/
+			}
 		}
 	}
 
 
-	public void InitStep()
-	{
-		navxTime.start();
-		pushtime.start();
-		backtime.start();
-	}
+		public void InitStep()
+		{
+			navxTime.start();
+			pushtime.start();
+			backtime.start();
+		}
 
-	public void LogInfo(String info) {
-		System.out.println(info + ";    ");
-	}
+		public void LogInfo(String info) {
+			System.out.println(info + ";    ");
+		}
 
-}
+	}

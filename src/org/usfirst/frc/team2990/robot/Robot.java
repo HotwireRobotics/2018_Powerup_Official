@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.PIDInterface;
 import edu.wpi.first.wpilibj.PIDOutput;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Talon;
@@ -28,8 +29,8 @@ import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.AnalogPotentiometer;
 
 public class Robot extends IterativeRobot implements PIDOutput {
- 
-	
+
+
 	public float delay;
 	// Sensors
 	// {
@@ -52,7 +53,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	// {
 	public DoubleSolenoid flapper = new DoubleSolenoid(0,1);
 	public DoubleSolenoid pancake = new DoubleSolenoid(5,4);
-	
+
 	// }
 
 	// Joysticks
@@ -85,7 +86,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	public Talon armTwo = new Talon(1);
 	public float potTarget;
 	public boolean armMove;
-	
+
 	public enum ArmTarget
 	{
 		None, Hold, Switch, Scale;
@@ -136,20 +137,16 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	public float largestZ;
 	PIDController armController;
 	public double potVal;
+	public String gameMessage;
 
+	public boolean crossLine;
 	public boolean cubeHold;
-	
-	//public SendableChooser autoSelection= new SendableChooser();
+
 	public void robotInit() {
-		
-		//autoSelection.addObject("Switch", AutonomousUsing = Switch);
-		//autoSelection.addObject("Cross", AutonomousUsing = Cross);
-		
-		
-		//SmartDashboard.putData("Autonomous Side Selection", autoSelection);
-		
+		SmartDashboard.putBoolean("Cross The Line Only", crossLine);
+
 		SmartDashboard.putNumber("Auto Delay", delay);
-		
+
 		pitch = navx.getPitch() * 1000;
 
 		armController = new PIDController(6.5f, 0.3, 7.0, 0, pot, this);
@@ -181,16 +178,19 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	public void autonomousInit() {
 		delay = (float) SmartDashboard.getNumber("Auto Delay", delay);
 
-		
+		crossLine = SmartDashboard.getBoolean("Cross The Line Only", crossLine);
+
+
+
 		drivetrain.SetBreak();
-	
+
 		//Line Cross auto
 		Cross[0] = new AutoStep(drivetrain, navx, frontUltrasonic, this);
 		Cross[1] = new AutoStep(drivetrain, navx, frontUltrasonic, this);
-		
+
 		Cross[0].NavxReset(delay);
 		Cross[1].TimedForward(0.8f, 7);
-		
+
 
 		// switch auto
 		Switch[0] = new AutoStep(drivetrain, navx, frontUltrasonic,  this);
@@ -199,28 +199,25 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		Switch[3] = new AutoStep(drivetrain, navx, frontUltrasonic,  this);
 		Switch[4] = new AutoStep(drivetrain, navx, frontUltrasonic,  this);
 		Switch[5] = new AutoStep(drivetrain, navx, frontUltrasonic,  this);
-		
+
 		Switch[0].NavxReset(0.20f);
 		Switch[0].InitStep();
-		
-		if (DriverStation.getInstance().getGameSpecificMessage().charAt(0) == 'L') {
-			Switch[1].RightTurnSide(12f, 1f);
-			System.out.println("Left");
-		} else {
-			Switch[1].LeftTurnSide(7f, 1f);
-			System.out.println("Right");
-		}
+		Switch[1].RobotTurn(1.0f, 12, 7);
 		Switch[2].UltrasonicTarget(28f, 0.5f);
 		Switch[3].Push(1f, .4f);
 		//Switch[4].Backup(1f, 0.6f, 17f);
 		//Switch[5].Straighten(0.6f);
-		
+
 		// scale auto
 		Scale[0] = new AutoStep(drivetrain, navx, frontUltrasonic, this);
 		Scale[0].WallTrackLeft(0.3f);
-		
-		AutonomousUsing = Switch;
-		
+
+		if(crossLine == true){
+			AutonomousUsing = Cross;
+		}else{
+			AutonomousUsing = Switch;
+		}
+
 		currentStep = 0;
 	}
 
@@ -256,7 +253,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 		xbox360Controller = new Joystick(0);
 		operator = new Joystick(1);
-		
+
 		intakeUltrasonic.setAutomaticMode(true);
 		frontUltrasonic.setAutomaticMode(true);
 
@@ -274,21 +271,21 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		SmartDashboard.putNumber("Scale I", ScaleI);
 		SmartDashboard.putNumber("Scale D", ScaleD); 
 		SmartDashboard.putNumber("Scale F", ScaleF);
-		
+
 		SmartDashboard.putNumber("Switch P", SwitchP);
 		SmartDashboard.putNumber("Switch I", SwitchI);
 		SmartDashboard.putNumber("Switch D", SwitchD);
 	}
-	
+
 	public void teleopPeriodic() {	
-		
+
 		if(pancake.get() == DoubleSolenoid.Value.kForward){
 			pancakeOut = true;
 		}else{
 			pancakeOut = false;
 		}
-		
-				
+
+
 		SmartDashboard.putNumber("Pot value: ", pot.get());
 
 		if (navx.getRawGyroZ() > largestZ) {
@@ -301,17 +298,17 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		ControllerDrive();
 
 		SmartDashboard.putNumber("Front Ultrasonic: ", frontUltrasonic.getRangeInches());
-	//	SmartDashboard.putNumber("Left Side Ultrasonic: ", leftsideultrasonic.getRangeInches());
+		//	SmartDashboard.putNumber("Left Side Ultrasonic: ", leftsideultrasonic.getRangeInches());
 		SmartDashboard.putNumber("Yaw: ", navx.getYaw());
 		SmartDashboard.putBoolean("Ultrasonic Down", ultradown);
 		SmartDashboard.putNumber("Pot: ", pot.get());
-				
-				
-				
+
+
+
 		SmartDashboard.putBoolean("Pancake", pancakeOut);
 		LogInfo("Pancake: " + pancake.get());
 		SmartDashboard.putNumber("Intake Ultrasonic: ", intakeUltrasonic.getRangeInches());
-		
+
 		//TODO
 
 
@@ -330,7 +327,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		double smoothing = 0.1f;
 		intakeUltraValue = (smoothing * intakeUltrasonic.getRangeInches()) + ((1 - smoothing) * intakeUltraValue);
 		SmartDashboard.putNumber("INTAKE ULTRA ", intakeUltraValue);
-		
+
 		if(operator.getRawButton(5)){
 			armTarget = ArmTarget.Switch;
 			pancake.set(DoubleSolenoid.Value.kForward);
@@ -346,7 +343,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 				if (intakeUltraValue < 4.5f) { //4.5
 					cubeHold = true;
 				}
-				
+
 				if (cubeHold)
 				{
 					pancake.set(DoubleSolenoid.Value.kForward);
@@ -465,16 +462,16 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		ScaleP = SmartDashboard.getNumber("Scale P", ScaleP);
 		ScaleI = SmartDashboard.getNumber("Scale I", ScaleI);
 		ScaleD = SmartDashboard.getNumber("Scale D", ScaleD);
-		
-		
-		
+
+
+
 		SwitchP = SmartDashboard.getNumber("Switch P", SwitchP);
 		SwitchI = SmartDashboard.getNumber("Switch I", SwitchI);
 		SwitchD = SmartDashboard.getNumber("Switch D", SwitchD);
 		//TODO
-		
-		
-		
+
+
+
 		UpdateMotors();
 	}
 
@@ -577,7 +574,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		armController.setI(ScaleI);
 		armController.setD(ScaleD);
 		armController.setF(ScaleF);
-			
+
 		if (pot.get() > 0.6f) {
 			doPidArmControl = false;
 			armOne.set(0.75);
@@ -594,9 +591,9 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		}
 
 	}
-	
+
 	public void ArmDoSwitch() {
-		
+
 		armController.setP(SwitchP);
 		armController.setI(SwitchI);
 		armController.setD(SwitchD);
