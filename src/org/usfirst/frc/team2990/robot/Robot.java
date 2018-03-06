@@ -343,7 +343,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			pancake.set(DoubleSolenoid.Value.kReverse);
 			armTarget = ArmTarget.None;
 			if (ultraTrigger && !operator.getRawButton(1)) {
-				if (intakeUltraValue < 4.5f) {
+				if (intakeUltraValue < 4.5f) { //4.5
 					cubeHold = true;
 				}
 				
@@ -580,8 +580,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			
 		if (pot.get() > 0.6f) {
 			doPidArmControl = false;
-			armOne.set(0.7);
-			armTwo.set(0.7);
+			armOne.set(0.75);
+			armTwo.set(0.75);
 			armController.disable();
 			SmartDashboard.putString("Scale power: ", "70% Power");
 			//TODO
