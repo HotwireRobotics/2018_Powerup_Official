@@ -51,8 +51,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 	// neumatics
 	// {
-	public DoubleSolenoid flapper = new DoubleSolenoid(0,1);
-	public DoubleSolenoid pancake = new DoubleSolenoid(5,4);
+	public DoubleSolenoid flapper = new DoubleSolenoid(2,3); //R1: 0,1 R2: 2,3
+	public DoubleSolenoid pancake = new DoubleSolenoid(4,5);
 
 	// }
 
@@ -337,7 +337,6 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			pancake.set(DoubleSolenoid.Value.kForward);
 			ultraTrigger = false;
 		}else{
-			pancake.set(DoubleSolenoid.Value.kReverse);
 			armTarget = ArmTarget.None;
 			if (ultraTrigger && !operator.getRawButton(1)) {
 				if (intakeUltraValue < 4.5f) { //4.5
@@ -352,6 +351,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 				cubeHold = false;
 				pancake.set(DoubleSolenoid.Value.kReverse);
 			}
+			System.out.println(cubeHold);
 		}
 
 		// operator controls
@@ -382,7 +382,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		} else if (operator.getPOV() > 5 && operator.getPOV() < 175) {
 			// scale shooting
 
-			if (Timer.get() >= 1) {
+			if (Timer.get() >= 1.2f) {
 				flapper.set(DoubleSolenoid.Value.kReverse);
 				pancake.set(DoubleSolenoid.Value.kReverse);
 				ultraTrigger = false;
@@ -575,7 +575,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		armController.setD(ScaleD);
 		armController.setF(ScaleF);
 
-		if (pot.get() > 0.6f) {
+		if (pot.get() > 0.64f) {
 			doPidArmControl = false;
 			armOne.set(0.75);
 			armTwo.set(0.75);
