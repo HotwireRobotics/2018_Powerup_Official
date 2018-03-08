@@ -187,9 +187,11 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		//Line Cross auto
 		Cross[0] = new AutoStep(drivetrain, navx, frontUltrasonic, this);
 		Cross[1] = new AutoStep(drivetrain, navx, frontUltrasonic, this);
-
-		Cross[0].NavxReset(delay);
-		Cross[1].TimedForward(0.8f, 7);
+		
+		
+		Cross[0].NavxReset(delay + 0.2f);
+		Cross[0].InitStep();
+		Cross[1].TimedForward(0.8f, 1.75f);
 
 
 		// switch auto
@@ -200,7 +202,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		Switch[4] = new AutoStep(drivetrain, navx, frontUltrasonic,  this);
 		Switch[5] = new AutoStep(drivetrain, navx, frontUltrasonic,  this);
 
-		Switch[0].NavxReset(0.20f);
+		Switch[0].NavxReset(0.20f + delay);
 		Switch[0].InitStep();
 		Switch[1].RobotTurn(1.0f, 12, 7);
 		Switch[2].UltrasonicTarget(28f, 0.5f);
@@ -213,6 +215,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		Scale[0].WallTrackLeft(0.3f);
 
 		if(crossLine == true){
+			System.out.println("Cross");
 			AutonomousUsing = Cross;
 		}else{
 			AutonomousUsing = Switch;

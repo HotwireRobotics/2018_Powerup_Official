@@ -122,6 +122,7 @@ public class AutoStep {
 		this.speed = sped;
 		rotateTargetLeft = degLeft;
 		rotateTargetRight = degRight;
+		type = StepType.RobotTurn;
 		
 	}
 
@@ -243,10 +244,11 @@ public class AutoStep {
 			robot.outtake();
 		}
 		if(type == StepType.TimedForward){
-			if(forwardTime.get() > timecap){
+			LogInfo("Forward");
+			if(pushtime.get() > timecap){
 				isDone = true;
 			}else{
-				drivetrain.SetBothSpeed(speed);
+				drivetrain.DriveStraight(speed, false);
 			}
 		}
 		if(type == StepType.RobotTurn){
