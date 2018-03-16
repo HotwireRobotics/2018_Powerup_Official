@@ -204,7 +204,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 		Switch[0].NavxReset(0.20f + delay);
 		Switch[0].InitStep();
-		Switch[1].RobotTurn(1.0f, 12, 7);
+		Switch[1].RobotTurn(1.0f, 11.5f, 8);
 		Switch[2].UltrasonicTarget(28f, 0.5f);
 		Switch[3].Push(1f, .4f);
 		//Switch[4].Backup(1f, 0.6f, 17f);
@@ -653,6 +653,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 	public void intake() {
 		float wheelspeed = 0.6f;
+		
 		wheelOne.set(-wheelspeed);
 		wheelTwo.set(wheelspeed);
 		//wheelThree.set(wheelspeed);
@@ -671,7 +672,16 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 
 	}
+	
+	public void lowScale(float speed){
+		float wheelspeed = speed;
+		wheelOne.set(wheelspeed);
+		wheelTwo.set(-wheelspeed);
+		//wheelThree.set(-wheelspeed);
+		//wheelFour.set(-wheelspeed);
 
+		
+	}
 	public void shoot(float speed) {
 
 		float wheelspeed = speed;

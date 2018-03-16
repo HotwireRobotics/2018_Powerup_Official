@@ -221,7 +221,9 @@ public class AutoStep {
 				drivetrain.SetRightSpeed(-speed);
 				drivetrain.SetLeftSpeed(speed);
 				if(pushtime.get() >= .3f){
-					robot.outtake();
+					float wheelspeed = 0.55f;
+					robot.wheelOne.set(wheelspeed);
+					robot.wheelTwo.set(-wheelspeed);
 					robot.ArmDoSwitch();
 				}
 			}else{
