@@ -9,7 +9,7 @@ import edu.wpi.first.wpilibj.Timer;
 
 public class AutoStep {
 	public enum StepType {
-		RotateLeft, RotateRight, Forward, UltrasonicTarget, AlignUltrasonicLeft, LeftTurnSide, NavxReset, Push, RightTurnSide, WallTrackLeft, WallTrackRight, ShootInSwitch, Backup, Straighten, TimedForward, RobotTurn
+		RotateLeft, RotateRight, Forward, UltrasonicTarget, AlignUltrasonicLeft, LeftTurnSide, NavxReset, Push, RightTurnSide, WallTrackLeft, WallTrackRight, ShootInSwitch, Backup, Straighten, TimedForward, RobotTurn, Wait
 	}
 
 	public StepType type;
@@ -28,10 +28,13 @@ public class AutoStep {
 	public Timer pushtime;
 	public Timer backtime;
 	public Timer forwardTime;
+	public Timer timer;
+	public Timer rotateTime;
 	public float timecap;
 	public Robot robot;
 	private float rotateTargetLeft;
 	private float rotateTargetRight;
+	public double firstUltra;
 	public AutoStep(DriveTrain choochoo, AHRS gyro, Ultrasonic lsonar, Robot robot) {
 		drivetrain = choochoo;
 		navx = gyro;
@@ -41,6 +44,8 @@ public class AutoStep {
 		navxTime = new Timer();
 		pushtime = new Timer();
 		backtime = new Timer();
+		timer = new Timer();
+		rotateTime = new Timer();
 		isDone = false;
 	}
 
@@ -101,14 +106,14 @@ public class AutoStep {
 
 		type = StepType.ShootInSwitch;
 	}
-	public void Backup(float time, float sped, float navxtarget){
+	public void Backup(float sped, float time){
 		this.speed = sped;
 		timecap = time;
 		type = StepType.Backup;
-		encoderTarget = navxtarget;
 	}
-	public void Straighten(float sped){
+	public void Straighten(float sped, float time){
 		this.speed = sped;
+		timecap = time;
 		type = StepType.Straighten;
 	}
 
@@ -123,15 +128,18 @@ public class AutoStep {
 		rotateTargetLeft = degLeft;
 		rotateTargetRight = degRight;
 		type = StepType.RobotTurn;
-		
+
+	}
+	public void Wait(float time){
+		timecap = time;
+		type = StepType.Wait;
 	}
 
 	public void Update() {
-		LogInfo("NavX: " + navx.getYaw());
+
 		drivetrain.SetLeftSpeed(0.0f);
 		drivetrain.SetRightSpeed(0.0f);
 		double adjustment = Math.pow(35.0f, speed);
-		LogInfo("Adj: " +adjustment);
 		if (type == StepType.RotateRight) {
 			if (navx.getYaw() < rotateTarget - adjustment) {
 				drivetrain.SetLeftSpeed(speed);
@@ -160,6 +168,7 @@ public class AutoStep {
 			if (lultrasonic.getRangeInches() > ultrasonicTarget) {
 				drivetrain.DriveStraight(speed, false);
 				robot.ArmDoSwitchAuto();
+				LogInfo("Ultrasonic: " + robot.frontUltrasonic.getRangeInches());
 			} else {
 				isDone = true;
 			}
@@ -172,16 +181,32 @@ public class AutoStep {
 			}
 		}
 		if (type == StepType.Backup){
+			if (backtime.get() < timecap) {
+				drivetrain.DriveStraight(-speed, false);
+				robot.wheelOne.set(0.0);
+				robot.wheelTwo.set(0.0);
+			} else {
+				isDone = true;
+			}
+		}
+		if(type == StepType.Straighten){
 			if(DriverStation.getInstance().getGameSpecificMessage().charAt(0) == 'L'){
-				if (navx.getYaw() < encoderTarget) {
-					drivetrain.SetRightSpeed(speed);
-				} else {
+				if( rotateTime.get() < timecap){
+					drivetrain.SetLeftSpeed(-speed);
+					drivetrain.SetRightSpeed(-speed);
+				}else{
 					isDone = true;
 				}
 			}else{
-				//drivetrain.SetLeftSpeed(-speed);
+				if( rotateTime.get() < timecap){
+					drivetrain.SetLeftSpeed(speed);
+					drivetrain.SetRightSpeed(speed);
+				}else{
+					isDone = true;
+				}
 			}
 		}
+
 		if(type == StepType.LeftTurnSide){
 			if((Math.abs(navx.getYaw()) < rotateTarget)){
 				drivetrain.SetLeftSpeed(speed);
@@ -220,14 +245,21 @@ public class AutoStep {
 				robot.pancake.set(DoubleSolenoid.Value.kReverse);
 				drivetrain.SetRightSpeed(-speed);
 				drivetrain.SetLeftSpeed(speed);
-				if(pushtime.get() >= .3f){
-					float wheelspeed = 0.55f;
+				if(pushtime.get() >= 0.3f){
+					float wheelspeed = 0.5f;
 					robot.wheelOne.set(wheelspeed);
 					robot.wheelTwo.set(-wheelspeed);
 					robot.ArmDoSwitch();
 				}
 			}else{
 				isDone = true;
+			}
+		}
+		if(type == StepType.Wait){
+			if(timer.get() > timecap){
+				isDone = true;
+			}else{
+				//do nothing
 			}
 		}
 		if(type == StepType.WallTrackLeft){
@@ -275,15 +307,17 @@ public class AutoStep {
 	}
 
 
-		public void InitStep()
-		{
-			navxTime.start();
-			pushtime.start();
-			backtime.start();
-		}
-
-		public void LogInfo(String info) {
-			System.out.println(info + ";    ");
-		}
-
+	public void InitStep()
+	{
+		navxTime.start();
+		pushtime.start();
+		backtime.start();
+		timer.start();
+		rotateTime.start();
 	}
+
+	public void LogInfo(String info) {
+		System.out.println(info + ";    ");
+	}
+
+}
