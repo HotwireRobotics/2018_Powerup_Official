@@ -37,9 +37,9 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	// {
 	public AHRS navx = new AHRS(SPI.Port.kMXP);
 	public Ultrasonic frontUltrasonic = new Ultrasonic(0,1);
-	public Ultrasonic intakeUltrasonic = new Ultrasonic(2,3);
-	//public DigitalInput leftSwitch = new DigitalInput(2);
-	//	public DigitalInput rightSwitch = new DigitalInput(3);
+	//public Ultrasonic intakeUltrasonic = new Ultrasonic(2,3);
+	public DigitalInput leftSwitch = new DigitalInput(2);
+	public DigitalInput rightSwitch = new DigitalInput(3);
 	public CameraServer camera;
 	public Potentiometer pot = new AnalogPotentiometer(0);
 	public DigitalInput limitSwitch = new DigitalInput(4);
@@ -53,7 +53,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	// neumatics
 	// {
 	//public DoubleSolenoid ramps = new DoubleSolenoid(7,6); //R1 :2,3 R2: 7,6
-	public DoubleSolenoid flapper = new DoubleSolenoid(2,3); //R1: 7,6 R2: 2,3
+	public DoubleSolenoid flapper = new DoubleSolenoid(7,6); //R1: 7,6 R2: 2,3
 	public DoubleSolenoid pancake = new DoubleSolenoid(4,5);
 
 	// }
@@ -158,7 +158,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		// encoder.reset();
 
 		frontUltrasonic.setAutomaticMode(true);
-		intakeUltrasonic.setAutomaticMode(true);
+		//intakeUltrasonic.setAutomaticMode(true);
 		//leftsideultrasonic.setAutomaticMode(true);
 
 		// Camera
@@ -258,14 +258,14 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		armMove = false;
 		armController.disable();
 		debug = new Joystick(3);
-		SmartDashboard.putNumber("Intake Ultrasonic", intakeUltrasonic.getRangeInches());
+		//SmartDashboard.putNumber("Intake Ultrasonic", intakeUltrasonic.getRangeInches());
 
 		drivetrain.SetCoast();
 
 		xbox360Controller = new Joystick(0);
 		operator = new Joystick(1);
 
-		intakeUltrasonic.setAutomaticMode(true);
+		//intakeUltrasonic.setAutomaticMode(true);
 		frontUltrasonic.setAutomaticMode(true);
 
 		float lerpSpeed = 0.5f;
@@ -289,14 +289,14 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	}
 
 	public void teleopPeriodic() {
-		SmartDashboard.putNumber("Intake Ultrasonic", intakeUltrasonic.getRangeInches());
-		SmartDashboard.getNumber("Intake Ultrasonic", intakeUltrasonic.getRangeInches());
+		//SmartDashboard.putNumber("Intake Ultrasonic", intakeUltrasonic.getRangeInches());
+		//SmartDashboard.getNumber("Intake Ultrasonic", intakeUltrasonic.getRangeInches());
 		//if(xbox360Controller.getRawButton(1)){
 		//ramps.set(DoubleSolenoid.Value.kReverse);
 		//}else{
 		//ramps.set(DoubleSolenoid.Value.kForward);
 		//}
-		
+
 		LogInfo("" + armTarget);
 
 		if(pancake.get() == DoubleSolenoid.Value.kForward){
@@ -348,162 +348,162 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		}else{
 			armTarget = ArmTarget.None;
 			if (ultraTrigger && !operator.getRawButton(1)) {
-				if (intakeUltrasonic.getRangeInches() < 3.5f){
-					//if(leftSwitch.get() && rightSwitch.get()) {
+				//if (intakeUltrasonic.getRangeInches() < 3.5f){
+				if(leftSwitch.get() && rightSwitch.get()) {
 					cubeHold = true;
-
 				}
-				
-					if (cubeHold) {
-						pancake.set(DoubleSolenoid.Value.kForward);
-						intakeMoving = false;
-					} else {
-						intakeMoving = false;
-						
-					}
-				} else {
+
+				if (cubeHold) {
+					pancake.set(DoubleSolenoid.Value.kForward);
 					intakeMoving = false;
-					cubeHold = false;
-					pancake.set(DoubleSolenoid.Value.kReverse);
+				} else {
+					intakeMoving = true;
+					intake();
 				}
-			}
-
-			if(!operator.getRawButton(2)){
+			} else {
 				intakeMoving = false;
-			}
-			// operator controls
-
-			if (delayShoot == 0) {
-				Timer.start();
-			}
-
-			if (operator.getRawButton(1)) {
-				intake();
-				intakeMoving = true;
-				flapper.set(DoubleSolenoid.Value.kForward);
-				ultraTrigger = true;
-			} else if (operator.getRawButton(4)) {
-				ultraTrigger = false;
-				outtake();
+				cubeHold = false;
 				pancake.set(DoubleSolenoid.Value.kReverse);
-				intakeMoving = true;
+			}
+		}
 
-			} else if ((operator.getPOV() > 270 || operator.getPOV() < 90) && operator.getPOV() != -1) {
-				// scale shooting
-				LogInfo("High Scale Shot");
+		// operator controls
 
-				if (Timer.get() >= 1.4f) {
-					flapper.set(DoubleSolenoid.Value.kReverse);
-					pancake.set(DoubleSolenoid.Value.kReverse);
-					ultraTrigger = false;
-				} else {
-					ultraTrigger = false;
-					flapper.set(DoubleSolenoid.Value.kForward);
-					delayShoot++;
-					pancakeTimer.reset();
-				}
-				if (Timer.get() >= .25) {
-					shoot(1);
-					intakeMoving = true;
-				}
+		if (delayShoot == 0) {
+			Timer.start();
+		}
 
-			}else if(operator.getPOV() > 90 && operator.getPOV() < 270){
-				//low scale shooting
-				LogInfo("Low Shot");
-				if (Timer.get() >= 1.4f) {
-					flapper.set(DoubleSolenoid.Value.kReverse);
-					pancake.set(DoubleSolenoid.Value.kReverse);
-					ultraTrigger = false;
-				} else {
-					ultraTrigger = false;
-					flapper.set(DoubleSolenoid.Value.kForward);
-					delayShoot++;
-					pancakeTimer.reset();
-				}
-				if (Timer.get() >= .25) {
-					lowScale(.80f);
-					intakeMoving = true;
-				}
+		if (operator.getRawButton(1)) {
+			intake();
+			intakeMoving = true;
+			flapper.set(DoubleSolenoid.Value.kForward);
+			ultraTrigger = true;
+		} else if (operator.getRawButton(4)) {
+			ultraTrigger = false;
+			outtake();
+			pancake.set(DoubleSolenoid.Value.kReverse);
+			intakeMoving = true;
 
+		} else if ((operator.getPOV() > 270 || operator.getPOV() < 90) && operator.getPOV() != -1) {
+			// scale shooting
+			LogInfo("High Scale Shot");
 
-
-			} else if (operator.getRawButton(2)) {
-				intake();
-				intakeMoving = true;
-			}else if(operator.getRawButtonPressed(8)){
+			if (Timer.get() >= 1.4f) {
+				flapper.set(DoubleSolenoid.Value.kReverse);
+				pancake.set(DoubleSolenoid.Value.kReverse);
+				ultraTrigger = false;
+			} else {
+				ultraTrigger = false;
+				flapper.set(DoubleSolenoid.Value.kForward);
+				delayShoot++;
+				pancakeTimer.reset();
+			}
+			if (Timer.get() >= .25) {
 				shoot(1);
 				intakeMoving = true;
+			}
+
+		}else if(operator.getPOV() > 90 && operator.getPOV() < 270){
+			//low scale shooting
+			LogInfo("Low Shot");
+			if (Timer.get() >= 1.4f) {
+				flapper.set(DoubleSolenoid.Value.kReverse);
+				pancake.set(DoubleSolenoid.Value.kReverse);
 				ultraTrigger = false;
-			}else if(operator.getRawButton(3)){
+			} else {
+				ultraTrigger = false;
 				flapper.set(DoubleSolenoid.Value.kForward);
-			}else{
-				if (operator.getPOV() < 0) {
-					flapper.set(DoubleSolenoid.Value.kReverse);
-					delayShoot = 0;
-					Timer.stop();
-					Timer.reset();
-				}
+				delayShoot++;
+				pancakeTimer.reset();
 			}
-
-			LogInfo("POV: " + operator.getPOV());
-
-			if (!intakeMoving) {
-				wheelOne.set(0);
-				wheelTwo.set(0);
+			if (Timer.get() >= .25) {
+				lowScale(.80f);
+				intakeMoving = true;
 			}
 
 
-			// arm targets
-			{
-				HoldTarget = (float) SmartDashboard.getNumber("Hold Targer", HoldTarget);
-				HoldP = (float) SmartDashboard.getNumber("Hold P: ", HoldP);
-				HoldI = (float) SmartDashboard.getNumber("Hold I: ", HoldI);
-				HoldD = (float) SmartDashboard.getNumber("Hold D: ", HoldD);
 
-
-				if (armTarget == ArmTarget.Hold) {
-					LogInfo("Holding");
-
-					armController.setP(HoldP);
-					armController.setI(HoldI);
-					armController.setD(HoldD);
-
-					armController.setSetpoint(HoldTarget);
-					armController.enable();
-					doPidArmControl = true;
-
-				} else if (armTarget == ArmTarget.Switch) {
-					ArmDoSwitch();
-				} else if (armTarget == ArmTarget.Scale) {
-					ArmDoScale();
-				}else if(armTarget == ArmTarget.None){
-					armController.disable();
-					armController.reset();
-					doPidArmControl = true;
-
-				} else {		
-					armController.disable();
-					armController.reset();
-					doPidArmControl = true;
-				}
+		} else if (operator.getRawButton(2)) {
+			intake();
+			intakeMoving = true;
+		}else if(operator.getRawButtonPressed(8)){
+			shoot(1);
+			intakeMoving = true;
+			ultraTrigger = false;
+		}else if(operator.getRawButton(3)){
+			flapper.set(DoubleSolenoid.Value.kForward);
+		}else{
+			if (operator.getPOV() < 0) {
+				flapper.set(DoubleSolenoid.Value.kReverse);
+				delayShoot = 0;
+				Timer.stop();
+				Timer.reset();
 			}
-
-			ScaleP = SmartDashboard.getNumber("Scale P", ScaleP);
-			ScaleI = SmartDashboard.getNumber("Scale I", ScaleI);
-			ScaleD = SmartDashboard.getNumber("Scale D", ScaleD);
-
-
-
-			SwitchP = SmartDashboard.getNumber("Switch P", SwitchP);
-			SwitchI = SmartDashboard.getNumber("Switch I", SwitchI);
-			SwitchD = SmartDashboard.getNumber("Switch D", SwitchD);
-			//TODO
-
-
-
-			UpdateMotors();
 		}
-	
+
+		LogInfo("POV: " + operator.getPOV());
+		if (!intakeMoving) {
+			wheelOne.set(0);
+			wheelTwo.set(0);
+		}
+
+
+		// arm targets
+		{
+			HoldTarget = (float) SmartDashboard.getNumber("Hold Targer", HoldTarget);
+			HoldP = (float) SmartDashboard.getNumber("Hold P: ", HoldP);
+			HoldI = (float) SmartDashboard.getNumber("Hold I: ", HoldI);
+			HoldD = (float) SmartDashboard.getNumber("Hold D: ", HoldD);
+
+
+			if (armTarget == ArmTarget.Hold) {
+				LogInfo("Holding");
+
+				armController.setP(HoldP);
+				armController.setI(HoldI);
+				armController.setD(HoldD);
+
+				armController.setSetpoint(HoldTarget);
+				armController.enable();
+				doPidArmControl = true;
+
+			} else if (armTarget == ArmTarget.Switch) {
+				ArmDoSwitch();
+			} else if (armTarget == ArmTarget.Scale) {
+				ArmDoScale();
+			}else if(armTarget == ArmTarget.None){
+				armController.disable();
+				armController.reset();
+				doPidArmControl = true;
+				
+				if(pot.get() < .69f){
+					armOne.set(0);
+					armTwo.set(0);	
+				}
+
+			} else {		
+				armController.disable();
+				armController.reset();
+				doPidArmControl = true;
+			}
+		}
+
+		ScaleP = SmartDashboard.getNumber("Scale P", ScaleP);
+		ScaleI = SmartDashboard.getNumber("Scale I", ScaleI);
+		ScaleD = SmartDashboard.getNumber("Scale D", ScaleD);
+
+
+
+		SwitchP = SmartDashboard.getNumber("Switch P", SwitchP);
+		SwitchI = SmartDashboard.getNumber("Switch I", SwitchI);
+		SwitchD = SmartDashboard.getNumber("Switch D", SwitchD);
+		//TODO
+
+
+
+		UpdateMotors();
+	}
+
 
 
 	public void testInit() {
