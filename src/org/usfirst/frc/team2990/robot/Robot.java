@@ -52,8 +52,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 	// neumatics
 	// {
-	//public DoubleSolenoid ramps = new DoubleSolenoid(7,6); //R1 :2,3 R2: 7,6
-	public DoubleSolenoid flapper = new DoubleSolenoid(7,6); //R1: 7,6 R2: 2,3
+	//public DoufbleSolenoid ramps = new DoubleSolenoid(7,6); //R1 :2,3 R2: 7,6
+	public DoubleSolenoid flapper = new DoubleSolenoid(2,3); //R1: 7,6 R2: 2,3
 	public DoubleSolenoid pancake = new DoubleSolenoid(4,5);
 
 	// }
@@ -95,8 +95,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	public ArmTarget armTarget;
 
 	public double SwitchP = 5f;
-	public double SwitchI= .5f;
-	public double SwitchD = 0f;
+	public double SwitchI= .6f;
+	public double SwitchD = 6.0f;
 	public float SwitchF = 0f;
 	public float SwitchTarget = 0.65f;
 
@@ -202,7 +202,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 
 		// switch auto
-		Switch = new AutoStep[7];
+		Switch = new AutoStep[9];
 		for (int i = 0; i < Switch.length; i++) {
 			Switch[i] =  new AutoStep(drivetrain, navx, frontUltrasonic,  this);
 		}
@@ -214,8 +214,10 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		Switch[2].Wait(0.1f);
 		Switch[3].UltrasonicTarget(22f, 0.7f); //28
 		Switch[4].Push(2.0f, .4f);
-		Switch[5].Backup(0.2f, 2.5f);
+		Switch[5].Backup(0.2f, 2.75f);
 		Switch[6].Straighten(-0.3f, 0.75f); //l, r
+		Switch[7].ForwardPickup(0.2f, 1.5f, 0.5f);
+		Switch[8].Backup(0.2f, 1.0f);
 		//Switch[6].Wait(0.2f);
 		//Switch[7].Straighten(0.4f, 30);
 		//Switch[5].Straighten(0.6f);
@@ -339,13 +341,17 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 		if(operator.getRawButton(5)){
 			armTarget = ArmTarget.Switch;
-			pancake.set(DoubleSolenoid.Value.kForward);
+			if (operator.getPOV() < 0 && !operator.getRawButton(4)) {
+				pancake.set(DoubleSolenoid.Value.kForward);
+			}
 			ultraTrigger = false;
-		}else if(operator.getRawButton(6)){
+		} else if(operator.getRawButton(6)){
 			armTarget = ArmTarget.Scale;
-			pancake.set(DoubleSolenoid.Value.kForward);
+			if (operator.getPOV() < 0) {
+				pancake.set(DoubleSolenoid.Value.kForward);
+			}
 			ultraTrigger = false;
-		}else{
+		} else {
 			armTarget = ArmTarget.None;
 			if (ultraTrigger && !operator.getRawButton(1)) {
 				//if (intakeUltrasonic.getRangeInches() < 3.5f){
@@ -381,7 +387,9 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		} else if (operator.getRawButton(4)) {
 			ultraTrigger = false;
 			outtake();
-			pancake.set(DoubleSolenoid.Value.kReverse);
+			if(armTarget == armTarget.Switch){
+				pancake.set(DoubleSolenoid.Value.kReverse);
+			}
 			intakeMoving = true;
 
 		} else if ((operator.getPOV() > 270 || operator.getPOV() < 90) && operator.getPOV() != -1) {
@@ -420,9 +428,6 @@ public class Robot extends IterativeRobot implements PIDOutput {
 				lowScale(.80f);
 				intakeMoving = true;
 			}
-
-
-
 		} else if (operator.getRawButton(2)) {
 			intake();
 			intakeMoving = true;
@@ -441,7 +446,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			}
 		}
 
-		LogInfo("POV: " + operator.getPOV());
+		//LogInfo("POV: " + operator.getPOV());
+		LogInfo("CAKE - " + pancake.get());
 		if (!intakeMoving) {
 			wheelOne.set(0);
 			wheelTwo.set(0);

@@ -1,5 +1,7 @@
 package org.usfirst.frc.team2990.robot;
 
+import org.usfirst.frc.team2990.robot.Robot.ArmTarget;
+
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
@@ -9,7 +11,7 @@ import edu.wpi.first.wpilibj.Timer;
 
 public class AutoStep {
 	public enum StepType {
-		RotateLeft, RotateRight, Forward, UltrasonicTarget, AlignUltrasonicLeft, LeftTurnSide, NavxReset, Push, RightTurnSide, WallTrackLeft, WallTrackRight, ShootInSwitch, Backup, Straighten, TimedForward, RobotTurn, Wait
+		RotateLeft, RotateRight, Forward, UltrasonicTarget, AlignUltrasonicLeft, LeftTurnSide, NavxReset, Push, RightTurnSide, WallTrackLeft, WallTrackRight, ShootInSwitch, Backup, Straighten, TimedForward, RobotTurn, Wait, ForwardPickup
 	}
 
 	public StepType type;
@@ -30,7 +32,10 @@ public class AutoStep {
 	public Timer forwardTime;
 	public Timer timer;
 	public Timer rotateTime;
+	public Timer pickupTime;
+	public Timer grabTime;
 	public float timecap;
+	public float timecap2;
 	public Robot robot;
 	private float rotateTargetLeft;
 	private float rotateTargetRight;
@@ -133,6 +138,12 @@ public class AutoStep {
 	public void Wait(float time){
 		timecap = time;
 		type = StepType.Wait;
+	}
+	public void ForwardPickup(float sped, float time, float time2){
+		timecap = time;
+		timecap2 = time2;
+		this.speed = sped;
+		type = StepType.ForwardPickup;
 	}
 
 	public void Update() {
@@ -255,6 +266,22 @@ public class AutoStep {
 				isDone = true;
 			}
 		}
+		if(type == StepType.ForwardPickup){
+			robot.armTarget = ArmTarget.None;
+			if(pickupTime.get() < timecap){
+				robot.flapper.set(DoubleSolenoid.Value.kReverse);
+				drivetrain.DriveStraight(speed, false);
+				//robot.intake();
+			}else if(pickupTime.get() > timecap){
+				if(grabTime.get() > timecap2){
+					robot.flapper.set(DoubleSolenoid.Value.kForward);
+					robot.wheelOne.set(0);
+					robot.wheelTwo.set(0);
+				}else{
+					robot.intake();
+				}
+			}
+		}
 		if(type == StepType.Wait){
 			if(timer.get() > timecap){
 				isDone = true;
@@ -314,6 +341,8 @@ public class AutoStep {
 		backtime.start();
 		timer.start();
 		rotateTime.start();
+		pickupTime.start();
+		grabTime.start();
 	}
 
 	public void LogInfo(String info) {
