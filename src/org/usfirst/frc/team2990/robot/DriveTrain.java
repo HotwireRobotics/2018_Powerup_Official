@@ -73,6 +73,7 @@ public class DriveTrain implements PIDOutput {
 			speed = -speed;
 		}
 
+		// This stuff here is important!
 		System.out.println("STRAIGHT YAW " + navx.getYaw() + ";");
 		System.out.println("P: " + turnController.getP() + ";");
 		System.out.println("I: " + turnController.getI() + ";");
