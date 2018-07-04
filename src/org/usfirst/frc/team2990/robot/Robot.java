@@ -171,8 +171,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		largestZ = 0;
 	}
 
-	public void disabledPeriodic()
-	{
+	public void disabledPeriodic() {
 		delay = (float) SmartDashboard.getNumber("Auto Delay", delay);
 		crossLine = SmartDashboard.getBoolean("Cross The Line Only", crossLine);
 
@@ -202,7 +201,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 
 		// switch auto
-		Switch = new AutoStep[9];
+		Switch = new AutoStep[10];
 		for (int i = 0; i < Switch.length; i++) {
 			Switch[i] =  new AutoStep(drivetrain, navx, frontUltrasonic,  this);
 		}
@@ -213,11 +212,12 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		Switch[1].RobotTurn(1.0f, 13f, 8f); //r,l
 		Switch[2].Wait(0.1f);
 		Switch[3].UltrasonicTarget(22f, 0.7f); //28
-		Switch[4].Push(2.0f, .4f);
-		Switch[5].Backup(0.2f, 2.75f);
-		Switch[6].Straighten(-0.3f, 0.75f); //l, r
-		Switch[7].ForwardPickup(0.2f, 1.5f, 0.5f);
-		Switch[8].Backup(0.2f, 1.0f);
+		Switch[4].Push(2.0f, .3f);
+		Switch[5].Backup(0.4f, 1.5f);
+		Switch[6].Straighten(-0.3f, 0.57f, 0.55f); //l, r
+		Switch[7].ForwardPickup(0.4f, 1.35f, 2.0f);
+		Switch[8].Backup(0.4f, 1.30f);
+		Switch[9].Straighten(0.3f, 0.77f, 0.5f); //l,r
 		//Switch[6].Wait(0.2f);
 		//Switch[7].Straighten(0.4f, 30);
 		//Switch[5].Straighten(0.6f);
@@ -247,10 +247,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			}
 		}
 
-		if( AutonomousUsing == Switch && currentStep > 6){
-			wheelOne.set(0);
-			wheelTwo.set(0);
-		}
+		
 
 		UpdateMotors();
 	}
@@ -378,7 +375,6 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		if (delayShoot == 0) {
 			Timer.start();
 		}
-
 		if (operator.getRawButton(1)) {
 			intake();
 			intakeMoving = true;
@@ -530,6 +526,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		//SmartDashboard.putNumber("Scale I: ", ScaleI);
 		//SmartDashboard.putNumber("Scale D: ", ScaleD);
 		//SmartDashboard.putNumber("Scale F: ", ScaleF);
+		SmartDashboard.putNumber("Yaw", navx.getYaw());
 
 	}
 
@@ -557,9 +554,12 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		SmartDashboard.putNumber("Left Ultrasonic: ", lultrasonic.getRangeInches());
 		SmartDashboard.putNumber("Right Ultrasonic: ", rultrasonic.getRangeInches());
 		SmartDashboard.putNumber("Pot: ", pot.get());
+		
 		 */
 		//LogInfo("Pot Value" + potTarget);
 
+		SmartDashboard.getNumber("Yaw", navx.getYaw());
+		
 		if (debug.getRawButton(5)) {
 			//intake();
 		} else {

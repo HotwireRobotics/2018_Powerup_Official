@@ -34,6 +34,7 @@ public class AutoStep {
 	public Timer rotateTime;
 	public Timer pickupTime;
 	public Timer grabTime;
+	public Timer takeTime;
 	public float timecap;
 	public float timecap2;
 	public Robot robot;
@@ -50,7 +51,10 @@ public class AutoStep {
 		pushtime = new Timer();
 		backtime = new Timer();
 		timer = new Timer();
+		pickupTime = new Timer();
+		grabTime= new Timer();
 		rotateTime = new Timer();
+		takeTime = new Timer();
 		isDone = false;
 	}
 
@@ -116,9 +120,10 @@ public class AutoStep {
 		timecap = time;
 		type = StepType.Backup;
 	}
-	public void Straighten(float sped, float time){
+	public void Straighten(float sped, float time, float time2){
 		this.speed = sped;
 		timecap = time;
+		timecap2 = time2;
 		type = StepType.Straighten;
 	}
 
@@ -192,6 +197,9 @@ public class AutoStep {
 			}
 		}
 		if (type == StepType.Backup){
+			robot.pancake.set(DoubleSolenoid.Value.kForward);
+			robot.wheelOne.set(0.0f);
+			robot.wheelTwo.set(0.0f);
 			if (backtime.get() < timecap) {
 				drivetrain.DriveStraight(-speed, false);
 				robot.wheelOne.set(0.0);
@@ -206,10 +214,11 @@ public class AutoStep {
 					drivetrain.SetLeftSpeed(-speed);
 					drivetrain.SetRightSpeed(-speed);
 				}else{
+					robot.armController.reset();
 					isDone = true;
 				}
 			}else{
-				if( rotateTime.get() < timecap){
+				if( rotateTime.get() < timecap2){
 					drivetrain.SetLeftSpeed(speed);
 					drivetrain.SetRightSpeed(speed);
 				}else{
@@ -267,18 +276,36 @@ public class AutoStep {
 			}
 		}
 		if(type == StepType.ForwardPickup){
-			robot.armTarget = ArmTarget.None;
+			robot.pancake.set(DoubleSolenoid.Value.kReverse);
+			//robot.armTarget = ArmTarget.None;
+			robot.flapper.set(DoubleSolenoid.Value.kForward);
+			//float wheelspeed = 0.5f;
+			//robot.wheelOne.set(-wheelspeed);
+			//robot.wheelTwo.set(wheelspeed);
+			robot.armController.disable();
+			robot.armController.reset();
+			robot.doPidArmControl = true;
+			LogInfo("In here");
 			if(pickupTime.get() < timecap){
-				robot.flapper.set(DoubleSolenoid.Value.kReverse);
+
 				drivetrain.DriveStraight(speed, false);
 				//robot.intake();
 			}else if(pickupTime.get() > timecap){
 				if(grabTime.get() > timecap2){
-					robot.flapper.set(DoubleSolenoid.Value.kForward);
-					robot.wheelOne.set(0);
-					robot.wheelTwo.set(0);
-				}else{
-					robot.intake();
+					robot.flapper.set(DoubleSolenoid.Value.kReverse);
+					if(robot.rightSwitch.get() == true && robot.leftSwitch.get() == true){
+						isDone = true;
+					}else{
+					//	robot.wheelOne.set(-wheelspeed);
+					//	robot.wheelTwo.set(wheelspeed);
+						if(takeTime.get() > 1.5f){
+							robot.flapper.set(DoubleSolenoid.Value.kForward);
+							if(takeTime.get() > 2.0f){
+								robot.flapper.set(DoubleSolenoid.Value.kReverse);
+							}
+						}
+					}
+
 				}
 			}
 		}
@@ -343,6 +370,7 @@ public class AutoStep {
 		rotateTime.start();
 		pickupTime.start();
 		grabTime.start();
+		takeTime.start();
 	}
 
 	public void LogInfo(String info) {
