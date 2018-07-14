@@ -21,6 +21,9 @@ import javax.sound.midi.ControllerEventListener;
 import org.usfirst.frc.team2990.robot.DriveTrain;
 
 import edu.wpi.cscore.UsbCamera;
+
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.Ultrasonic;
@@ -67,8 +70,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 	// Shooting
 	// {
-	public Victor wheelOne = new Victor(3); //l
-	public Victor wheelTwo = new Victor(2); //r
+	public TalonSRX wheelOne = new TalonSRX(1); //l
+	public TalonSRX wheelTwo = new TalonSRX(4); //r
 	//public Victor wheelThree = new Victor(7); //na
 	//public Victor wheelFour = new Victor(6); //na
 	public Double ultrasonicFinal;
@@ -253,6 +256,9 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	}
 
 	public void teleopInit() {
+		
+		SmartDashboard.putNumber("TestNumber", 1234);
+		
 		//DriveTrain.Speed = 0;
 		armMove = false;
 		armController.disable();
@@ -445,8 +451,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		//LogInfo("POV: " + operator.getPOV());
 		LogInfo("CAKE - " + pancake.get());
 		if (!intakeMoving) {
-			wheelOne.set(0);
-			wheelTwo.set(0);
+			wheelOne.set(ControlMode.PercentOutput, 0);
+			wheelTwo.set(ControlMode.PercentOutput, 0);
 		}
 
 
@@ -688,8 +694,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	public void intake() {
 		float wheelspeed = 0.5f;
 
-		wheelOne.set(-wheelspeed);
-		wheelTwo.set(wheelspeed);
+		wheelOne.set(ControlMode.PercentOutput, wheelspeed);
+		wheelTwo.set(ControlMode.PercentOutput, -wheelspeed);
 		//wheelThree.set(wheelspeed);
 		//wheelFour.set(wheelspeed);
 
@@ -699,8 +705,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 	public void outtake() {
 		float wheelspeed = 0.70f;
-		wheelOne.set(wheelspeed);
-		wheelTwo.set(-wheelspeed);
+		wheelOne.set(ControlMode.PercentOutput, -wheelspeed);
+		wheelTwo.set(ControlMode.PercentOutput, wheelspeed);
 		//wheelThree.set(-wheelspeed);
 		//wheelFour.set(-wheelspeed);
 
@@ -709,8 +715,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 	public void lowScale(float speed){
 		float wheelspeed = speed;
-		wheelOne.set(wheelspeed);
-		wheelTwo.set(-wheelspeed);
+		wheelOne.set(ControlMode.PercentOutput, wheelspeed);
+		wheelTwo.set(ControlMode.PercentOutput, -wheelspeed, ScaleD);
 		//wheelThree.set(-wheelspeed);
 		//wheelFour.set(-wheelspeed);
 
@@ -719,8 +725,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	public void shoot(float speed) {
 
 		float wheelspeed = speed;
-		wheelOne.set(wheelspeed);
-		wheelTwo.set(-wheelspeed);
+		wheelOne.set(ControlMode.PercentOutput, -wheelspeed);
+		wheelTwo.set(ControlMode.PercentOutput, wheelspeed);
 		//wheelThree.set(-wheelspeed);
 		//wheelFour.set(-wheelspeed);
 	}

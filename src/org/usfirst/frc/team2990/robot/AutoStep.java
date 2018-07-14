@@ -2,6 +2,7 @@ package org.usfirst.frc.team2990.robot;
 
 import org.usfirst.frc.team2990.robot.Robot.ArmTarget;
 
+import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
@@ -198,12 +199,12 @@ public class AutoStep {
 		}
 		if (type == StepType.Backup){
 			robot.pancake.set(DoubleSolenoid.Value.kForward);
-			robot.wheelOne.set(0.0f);
-			robot.wheelTwo.set(0.0f);
+			robot.wheelOne.set(ControlMode.PercentOutput, 0.0f);
+			robot.wheelTwo.set(ControlMode.PercentOutput, 0.0f);
 			if (backtime.get() < timecap) {
 				drivetrain.DriveStraight(-speed, false);
-				robot.wheelOne.set(0.0);
-				robot.wheelTwo.set(0.0);
+				robot.wheelOne.set(ControlMode.PercentOutput, 0.0);
+				robot.wheelTwo.set(ControlMode.PercentOutput, 0.0);
 			} else {
 				isDone = true;
 			}
@@ -267,8 +268,8 @@ public class AutoStep {
 				drivetrain.SetLeftSpeed(speed);
 				if(pushtime.get() >= 0.3f){
 					float wheelspeed = 0.5f;
-					robot.wheelOne.set(wheelspeed);
-					robot.wheelTwo.set(-wheelspeed);
+					robot.wheelOne.set(ControlMode.PercentOutput, wheelspeed);
+					robot.wheelTwo.set(ControlMode.PercentOutput, -wheelspeed);
 					robot.ArmDoSwitch();
 				}
 			}else{
