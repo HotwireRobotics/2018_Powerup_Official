@@ -56,7 +56,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	// neumatics
 	// {
 	//public DoufbleSolenoid ramps = new DoubleSolenoid(7,6); //R1 :2,3 R2: 7,6
-	public DoubleSolenoid flapper = new DoubleSolenoid(2,3); //R1: 7,6 R2: 2,3
+	public DoubleSolenoid flapper = new DoubleSolenoid(6,7); //R1: 7,6 R2: 2,3
 	public DoubleSolenoid pancake = new DoubleSolenoid(4,5);
 
 	// }
@@ -130,6 +130,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	// {
 	public AutoStep step = new AutoStep(drivetrain, navx, frontUltrasonic, this);
 	public AutoStep[] Switch = new AutoStep[7];
+	public AutoStep[] Shoot = new AutoStep[1];
 	public AutoStep[] Scale = new AutoStep[1];
 	public AutoStep[] Cross = new AutoStep[2];
 	public AutoStep[] AutonomousUsing;
@@ -143,7 +144,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	public double potVal;
 	public String gameMessage;
 
-	public boolean crossLine;
+	public String crossLine = "Shoot Switch";
 	public boolean cubeHold;
 
 	public void robotInit() {
@@ -176,9 +177,9 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 	public void disabledPeriodic() {
 		delay = (float) SmartDashboard.getNumber("Auto Delay", delay);
-		crossLine = SmartDashboard.getBoolean("Cross The Line Only", crossLine);
+		crossLine = SmartDashboard.getString("Cross Line; Normal Switch; Shoot Switch", crossLine);
 
-		SmartDashboard.putBoolean("Cross The Line Only", crossLine);
+		SmartDashboard.putString("Cross Line; Normal Switch; Shoot Switch", crossLine);
 		SmartDashboard.putNumber("Auto Delay", delay);
 
 		xbox360Controller = new Joystick(0);
@@ -188,12 +189,12 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	public void autonomousInit() {
 
 		delay = (float) SmartDashboard.getNumber("Auto Delay", delay);
-		crossLine = SmartDashboard.getBoolean("Cross The Line Only", crossLine);
+		crossLine = SmartDashboard.getString("Cross Line; Normal Switch; Shoot Switch", crossLine);
 
 
 		drivetrain.SetBreak();
 
-		//Line Cross auto
+		//Cross Line  auto
 		Cross[0] = new AutoStep(drivetrain, navx, frontUltrasonic, this);
 		Cross[1] = new AutoStep(drivetrain, navx, frontUltrasonic, this);
 
@@ -203,7 +204,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		Cross[1].TimedForward(0.8f, 1.75f);
 
 
-		// switch auto
+		//Normal Switch  auto
 		Switch = new AutoStep[10];
 		for (int i = 0; i < Switch.length; i++) {
 			Switch[i] =  new AutoStep(drivetrain, navx, frontUltrasonic,  this);
@@ -212,7 +213,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 		Switch[0].NavxReset(0.20f + delay);
 		Switch[0].InitStep();
-		Switch[1].RobotTurn(1.0f, 13f, 8f); //r,l
+		Switch[1].RobotTurn(1.0f, 13f, 8f, 0.0f, 0.0f); //r,l
 		Switch[2].Wait(0.1f);
 		Switch[3].UltrasonicTarget(22f, 0.7f); //28
 		Switch[4].Push(2.0f, .3f);
@@ -224,14 +225,33 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		//Switch[6].Wait(0.2f);
 		//Switch[7].Straighten(0.4f, 30);
 		//Switch[5].Straighten(0.6f);
-
-
-		if(crossLine == true){
+		
+		//Shoot Switch  auto
+		Shoot = new AutoStep[5];
+		for (int i = 0; i < Shoot.length; i++) {
+			Shoot[i] =  new AutoStep(drivetrain, navx, frontUltrasonic,  this);
+		}
+		
+		Shoot[0].NavxReset(0.0f + delay);
+		Shoot[0].InitStep();
+		Shoot[1].RobotTurn(1.0f, 13f, 8f, 1.0f, 1.0f);
+		Shoot[2].ShootSwitch(1.0f, 1.0f, 1.0f);
+		//TODO find the correct degrees for right side rotate
+		Shoot[3].Rotate(0.0f, 10.0f, 0.25f, -1);
+		//TODO test step 4
+		Shoot[4].ForwardPickup(0.25f, 1.5f, 0.25f);
+		
+		if(crossLine == "Cross Line"){
 			System.out.println("Cross");
 			AutonomousUsing = Cross;
-		}else{
+		}else if (crossLine == "Normal Switch"){
 			AutonomousUsing = Switch;
-		}
+		}else if (crossLine == "Shoot Switch"){
+			AutonomousUsing = Shoot;
+		}else{
+			System.out.println("ERROR: Auto select misspelled; Defaulting to Shoot Switch");
+			AutonomousUsing = Shoot;
+		} //TODO fix auto select
 
 		currentStep = 0;
 	}
@@ -258,6 +278,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	public void teleopInit() {
 		
 		SmartDashboard.putNumber("TestNumber", 1234);
+		
 		
 		//DriveTrain.Speed = 0;
 		armMove = false;
@@ -291,6 +312,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		SmartDashboard.putNumber("Switch P", SwitchP);
 		SmartDashboard.putNumber("Switch I", SwitchI);
 		SmartDashboard.putNumber("Switch D", SwitchD);
+		
+		flapper.set(DoubleSolenoid.Value.kReverse);
 	}
 
 	public void teleopPeriodic() {
@@ -441,7 +464,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			flapper.set(DoubleSolenoid.Value.kForward);
 		}else{
 			if (operator.getPOV() < 0) {
-				flapper.set(DoubleSolenoid.Value.kReverse);
+				flapper.set(DoubleSolenoid.Value.kReverse); 
 				delayShoot = 0;
 				Timer.stop();
 				Timer.reset();

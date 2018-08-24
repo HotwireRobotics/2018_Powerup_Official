@@ -12,14 +12,18 @@ import edu.wpi.first.wpilibj.Timer;
 
 public class AutoStep {
 	public enum StepType {
-		RotateLeft, RotateRight, Forward, UltrasonicTarget, AlignUltrasonicLeft, LeftTurnSide, NavxReset, Push, RightTurnSide, WallTrackLeft, WallTrackRight, ShootInSwitch, Backup, Straighten, TimedForward, RobotTurn, Wait, ForwardPickup
+		Rotate, RotateRight, Forward, UltrasonicTarget, AlignUltrasonicLeft, LeftTurnSide, NavxReset, Push, RightTurnSide, WallTrackLeft, WallTrackRight, ShootInSwitch, Backup, Straighten, TimedForward, RobotTurn, Wait, ForwardPickup, ShootSwitch, StraightenLeft
 	}
 
 	public StepType type;
 	public DriveTrain drivetrain;
 	public AHRS navx;
 	public float rotateTarget;
+	public float rotateTargetR;
 	public float speed;
+	public float speedL;
+	public float speedR;
+	public int left;
 	public boolean isDone;
 	public Encoder encoder;
 	public float encoderTarget;
@@ -36,11 +40,14 @@ public class AutoStep {
 	public Timer pickupTime;
 	public Timer grabTime;
 	public Timer takeTime;
+	public Timer shootTime;
 	public float timecap;
 	public float timecap2;
 	public Robot robot;
 	private float rotateTargetLeft;
 	private float rotateTargetRight;
+	private float wheelShootSpeedLeft;
+	private float wheelShootSpeedRight;
 	public double firstUltra;
 	public AutoStep(DriveTrain choochoo, AHRS gyro, Ultrasonic lsonar, Robot robot) {
 		drivetrain = choochoo;
@@ -56,6 +63,7 @@ public class AutoStep {
 		grabTime= new Timer();
 		rotateTime = new Timer();
 		takeTime = new Timer();
+		shootTime = new Timer();
 		isDone = false;
 	}
 
@@ -69,10 +77,12 @@ public class AutoStep {
 		type = StepType.RotateRight;
 		speed = sped;
 	}
-	public void RotateLeft(float deg, float sped){
-		rotateTarget = -deg;
-		type = StepType.RotateLeft;
+	public void Rotate(float degL, float degR, float sped, int leftorright){
+		rotateTarget = -degL;
+		rotateTargetR = -degR;
+		type = StepType.Rotate;
 		speed = sped;
+		left = leftorright;
 	}
 	public void UltrasonicTarget(float dist, float sped) {
 		type = StepType.UltrasonicTarget;
@@ -134,10 +144,12 @@ public class AutoStep {
 		type = StepType.TimedForward;
 
 	}
-	public void RobotTurn(float sped, float degLeft, float degRight){
+	public void RobotTurn(float sped, float degLeft, float degRight, float revLeft, float revRight){
 		this.speed = sped;
 		rotateTargetLeft = degLeft;
 		rotateTargetRight = degRight;
+		wheelShootSpeedLeft = revLeft;
+		wheelShootSpeedRight = revRight;
 		type = StepType.RobotTurn;
 
 	}
@@ -151,22 +163,34 @@ public class AutoStep {
 		this.speed = sped;
 		type = StepType.ForwardPickup;
 	}
+	public void ShootSwitch(float speedLeft, float speedRight, float time){
+		speedL = speedLeft;
+		speedR = speedRight;
+		timecap = time;
+		type = StepType.ShootSwitch;
+	}
+	public void StraightenLeft(){
+		type = StepType.StraightenLeft;
+	}
 
 	public void Update() {
 
 		drivetrain.SetLeftSpeed(0.0f);
 		drivetrain.SetRightSpeed(0.0f);
 		double adjustment = Math.pow(35.0f, speed);
-		if (type == StepType.RotateRight) {
+		if (type == StepType.Rotate) {
+			if (DriverStation.getInstance().getGameSpecificMessage().charAt(0) == 'R'){
+				rotateTarget = rotateTargetR;
+			}
 			if (navx.getYaw() < rotateTarget - adjustment) {
-				drivetrain.SetLeftSpeed(speed);
-				drivetrain.SetRightSpeed(speed);
+				drivetrain.SetLeftSpeed(left * speed);
+				drivetrain.SetRightSpeed(left * speed);
 
 			} else {
 				isDone = true;
 			}
 		}
-		if (type == StepType.RotateLeft) {
+		if (type == StepType.RotateRight) { //TODO remove RotateRight
 			if (navx.getYaw() > rotateTarget + adjustment) {
 				drivetrain.SetLeftSpeed(-speed);
 				drivetrain.SetRightSpeed(-speed);
@@ -248,9 +272,10 @@ public class AutoStep {
 		}
 		if(type == StepType.NavxReset){
 			System.out.println("HEY " + navxTime.get());
-			if(navxTime.get() > timecap){
+			if(navxTime.get() > timecap && navx.getYaw() > -0.1 && navx.getYaw() < 0.1){
 				navx.reset();
 				robot.pancake.set(DoubleSolenoid.Value.kForward);
+				robot.flapper.set(DoubleSolenoid.Value.kForward);
 				isDone = true;
 			} else {
 				navx.reset();
@@ -344,19 +369,42 @@ public class AutoStep {
 			if(DriverStation.getInstance().getGameSpecificMessage().charAt(0) == 'L'){
 				if((Math.abs(navx.getYaw()) < rotateTargetLeft)){
 					drivetrain.SetRightSpeed(-speed);
-					robot.ArmGoHigh();
+					if(wheelShootSpeedLeft == 0){
+						robot.ArmGoHigh();
+					}
 				}else{
 					robot.armController.reset();
+					shootTime.start();
 					isDone= true;	
 				}
+				robot.shoot(wheelShootSpeedLeft);
 			}else{
 				if((Math.abs(navx.getYaw()) < rotateTargetRight)){
 					drivetrain.SetLeftSpeed(speed);
-					robot.ArmGoHigh();
+					if(wheelShootSpeedRight == 0){
+						robot.ArmGoHigh();
+					}
 				}else{
 					isDone= true;
 					robot.armController.reset();
+					shootTime.start();
 				}
+				robot.shoot(wheelShootSpeedRight);
+			}
+		}
+		if(type == StepType.ShootSwitch){
+			if (shootTime.get() < timecap){
+				robot.flapper.set(DoubleSolenoid.Value.kReverse);
+				robot.pancake.set(DoubleSolenoid.Value.kReverse);
+				if(DriverStation.getInstance().getGameSpecificMessage().charAt(0) == 'L'){
+					robot.shoot(speedL);
+				} else {
+					robot.shoot(speedR);
+				}
+			} else if (shootTime.get() > timecap){
+				robot.ArmGoHigh();
+			} else if (shootTime.get() > timecap + 0.1f){
+				isDone= true;
 			}
 		}
 	}
