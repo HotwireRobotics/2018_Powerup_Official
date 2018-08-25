@@ -205,24 +205,23 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 
 		//Normal Switch  auto
-		Switch = new AutoStep[6];
+		Switch = new AutoStep[10];
 		for (int i = 0; i < Switch.length; i++) {
 			Switch[i] =  new AutoStep(drivetrain, navx, frontUltrasonic,  this);
 		}
 
 
-		Switch[0].NavxReset(0.00f + delay);
+		Switch[0].NavxReset(0.20f + delay);
 		Switch[0].InitStep();
 		Switch[1].RobotTurn(1.0f, 13f, 8f, 0.0f, 0.0f); //r,l
 		Switch[2].Wait(0.1f);
 		Switch[3].UltrasonicTarget(22f, 0.7f); //28
 		Switch[4].Push(3.0f, .3f);
 		Switch[5].Backup(0.4f, 1.5f);
-		//Switch[6].Straighten(-0.3f, 0.57f, 0.55f); //l 0.57f, r 0.55f
-		//Switch[7].ForwardPickup(0.4f, 1.35f, 2.0f);
-		//Switch[8].Backup(0.4f, 1.30f);
-		//Switch[9].Straighten(0.3f, 0.77f, 0.5f); //l 0.77f, r 0.5f
-		
+		Switch[6].Straighten(-0.3f, 0.57f, 0.55f); //l, r
+		Switch[7].ForwardPickup(0.4f, 1.35f, 2.0f);
+		Switch[8].Backup(0.4f, 1.30f);
+		Switch[9].Straighten(0.3f, 0.77f, 0.5f); //l,r
 		//Switch[6].Wait(0.2f);
 		//Switch[7].Straighten(0.4f, 30);
 		//Switch[5].Straighten(0.6f);
