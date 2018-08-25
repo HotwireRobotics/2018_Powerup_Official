@@ -101,13 +101,13 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	public double SwitchI= .6f;
 	public double SwitchD = 6.0f;
 	public float SwitchF = 0f;
-	public float SwitchTarget = 0.62f; //.65  //0.83
+	public float SwitchTarget = 0.62f; //.62  //0.89 //TODO
 
 	public double ScaleP = 0.0f;
 	public double ScaleI= 0.0f;
 	public double ScaleD = 0.0f;
-	public float ScaleF = 5f;
-	public float ScaleTarget = 0.56f; //.56  //0.69
+	public float ScaleF = 5f; //5 //TODO
+	public float ScaleTarget = 0.56f; //.56  //0.82 //TODO
 	public float HighTarget = .47f;
 
 	public float AutoP = 6.0f;
