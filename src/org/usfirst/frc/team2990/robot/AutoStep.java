@@ -131,10 +131,10 @@ public class AutoStep {
 		timecap = time;
 		type = StepType.Backup;
 	}
-	public void Straighten(float sped, float time, float time2){
+	public void Straighten(float sped, float deg, float deg2){
 		this.speed = sped;
-		timecap = time;
-		timecap2 = time2;
+		rotateTarget = deg;
+		rotateTargetR = deg2;
 		type = StepType.Straighten;
 	}
 
@@ -235,7 +235,7 @@ public class AutoStep {
 		}
 		if(type == StepType.Straighten){
 			if(DriverStation.getInstance().getGameSpecificMessage().charAt(0) == 'L'){
-				if( rotateTime.get() < timecap){
+				if( robot.navx.getYaw() < rotateTarget){
 					drivetrain.SetLeftSpeed(-speed);
 					drivetrain.SetRightSpeed(-speed);
 				}else{
@@ -243,7 +243,7 @@ public class AutoStep {
 					isDone = true;
 				}
 			}else{
-				if( rotateTime.get() < timecap2){
+				if( robot.navx.getYaw() < rotateTargetR){
 					drivetrain.SetLeftSpeed(speed);
 					drivetrain.SetRightSpeed(speed);
 				}else{
