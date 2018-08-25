@@ -56,7 +56,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	// neumatics
 	// {
 	//public DoufbleSolenoid ramps = new DoubleSolenoid(7,6); //R1 :2,3 R2: 7,6
-	public DoubleSolenoid flapper = new DoubleSolenoid(6,7); //R1: 7,6 R2: 2,3
+	public DoubleSolenoid flapper = new DoubleSolenoid(2,3); //R1: 7,6 R2: 2,3
 	public DoubleSolenoid pancake = new DoubleSolenoid(4,5);
 
 	// }
@@ -97,17 +97,17 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	};
 	public ArmTarget armTarget;
 
-	public double SwitchP = 5f;
+	public double SwitchP = 5f; //5
 	public double SwitchI= .6f;
 	public double SwitchD = 6.0f;
 	public float SwitchF = 0f;
-	public float SwitchTarget = 0.65f;
+	public float SwitchTarget = 0.62f; //.65  //0.83
 
 	public double ScaleP = 0.0f;
 	public double ScaleI= 0.0f;
 	public double ScaleD = 0.0f;
 	public float ScaleF = 5f;
-	public float ScaleTarget = 0.56f;
+	public float ScaleTarget = 0.56f; //.56  //0.69
 	public float HighTarget = .47f;
 
 	public float AutoP = 6.0f;
@@ -144,7 +144,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	public double potVal;
 	public String gameMessage;
 
-	public String crossLine = "Shoot Switch";
+	public String crossLine = "Normal Switch";
 	public boolean cubeHold;
 
 	public void robotInit() {
@@ -216,7 +216,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		Switch[1].RobotTurn(1.0f, 13f, 8f, 0.0f, 0.0f); //r,l
 		Switch[2].Wait(0.1f);
 		Switch[3].UltrasonicTarget(22f, 0.7f); //28
-		Switch[4].Push(2.0f, .3f);
+		Switch[4].Push(3.0f, .3f);
 		Switch[5].Backup(0.4f, 1.5f);
 		Switch[6].Straighten(-0.3f, 0.57f, 0.55f); //l, r
 		Switch[7].ForwardPickup(0.4f, 1.35f, 2.0f);
@@ -250,7 +250,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			AutonomousUsing = Shoot;
 		}else{
 			System.out.println("ERROR: Auto select misspelled; Defaulting to Shoot Switch");
-			AutonomousUsing = Shoot;
+			AutonomousUsing = Switch;
 		} //TODO fix auto select
 
 		currentStep = 0;
@@ -507,7 +507,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 				armController.reset();
 				doPidArmControl = true;
 				
-				if(pot.get() < .69f){
+				if(pot.get() < .69f){ //.69
 					armOne.set(0);
 					armTwo.set(0);	
 				}
@@ -641,7 +641,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		armController.setD(ScaleD);
 		armController.setF(ScaleF);
 
-		if (pot.get() > 0.64f) {
+		if (pot.get() > 0.69f) { //.64
 			doPidArmControl = false;
 			armOne.set(0.90);
 			armTwo.set(0.90);
@@ -680,8 +680,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 	}
 	public void ArmGoHigh() {
-		armOne.set(0.6);
-		armOne.set(0.6);
+		armOne.set(0.7);
+		armOne.set(0.7);
 
 	}
 
