@@ -205,7 +205,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 
 		//Normal Switch  auto
-		Switch = new AutoStep[10];
+		Switch = new AutoStep[13];
 		for (int i = 0; i < Switch.length; i++) {
 			Switch[i] =  new AutoStep(drivetrain, navx, frontUltrasonic,  this);
 		}
@@ -216,12 +216,16 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		Switch[1].RobotTurn(1.0f, 13f, 8f, 0.0f, 0.0f); //r,l
 		Switch[2].Wait(0.1f);
 		Switch[3].UltrasonicTarget(22f, 0.7f); //28
-		Switch[4].Push(3.0f, .3f);
+		Switch[4].Push(2.0f, .3f);
 		Switch[5].Backup(0.4f, 1.5f);
-		Switch[6].Straighten(-0.3f, 0.57f, 0.55f); //l, r
-		Switch[7].ForwardPickup(0.4f, 1.35f, 2.0f);
+		Switch[6].Straighten(-0.4f, 41.0f, -45.0f); //l, r
+		Switch[7].ForwardPickup(0.4f, 1.4f, 2.0f);
 		Switch[8].Backup(0.4f, 1.30f);
-		Switch[9].Straighten(0.3f, 0.77f, 0.5f); //l,r
+		Switch[9].StraightenInvert(0.6f, 6.0f, 0.0f); //l,r
+		Switch[10].ArmGoHigh();
+		Switch[11].UltrasonicTarget(22f, 0.8f);
+		Switch[12].Push(5.0f, .3f);
+		
 		//Switch[6].Wait(0.2f);
 		//Switch[7].Straighten(0.4f, 30);
 		//Switch[5].Straighten(0.6f);
@@ -598,11 +602,19 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 
 		if (debug.getRawButton(2)) {
-			//flapper1.set(DoubleSolenoid.Value.kForward);
-			//flapper2.set(DoubleSolenoid.Value.kForward);
+			pancake.set(DoubleSolenoid.Value.kForward);
+			//flapper.set(DoubleSolenoid.Value.kForward);
 		} else {
-			//flapper1.set(DoubleSolenoid.Value.kReverse);
-			//flapper2.set(DoubleSolenoid.Value.kReverse);
+			pancake.set(DoubleSolenoid.Value.kReverse);
+			//flapper.set(DoubleSolenoid.Value.kReverse);
+		}
+		
+		if (debug.getRawButton(4)) {
+			//pancake.set(DoubleSolenoid.Value.kForward);
+			flapper.set(DoubleSolenoid.Value.kForward);
+		} else {
+			//pancake.set(DoubleSolenoid.Value.kReverse);
+			flapper.set(DoubleSolenoid.Value.kReverse);
 		}
 
 		if(debug.getRawButton(5)){
