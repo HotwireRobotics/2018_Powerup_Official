@@ -437,8 +437,6 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			}
 
 		}else if(operator.getPOV() > 90 && operator.getPOV() < 270){
-			//low scale shooting
-			LogInfo("Low Shot");
 			if (Timer.get() >= 1.4f) {
 				flapper.set(DoubleSolenoid.Value.kReverse);
 				pancake.set(DoubleSolenoid.Value.kReverse);
@@ -450,7 +448,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 				pancakeTimer.reset();
 			}
 			if (Timer.get() >= .25) {
-				lowScale(.80f);
+				shoot(0.8f);
 				intakeMoving = true;
 			}
 		} else if (operator.getRawButton(2)) {
@@ -641,7 +639,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		armController.setD(ScaleD);
 		armController.setF(ScaleF);
 
-		if (pot.get() > 0.69f) { //.64
+		if (pot.get() > 0.61f) { //.64
 			doPidArmControl = false;
 			armOne.set(0.90);
 			armTwo.set(0.90);
