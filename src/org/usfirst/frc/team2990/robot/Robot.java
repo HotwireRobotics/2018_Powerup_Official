@@ -56,8 +56,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	// neumatics
 	// {
 	//public DoufbleSolenoid ramps = new DoubleSolenoid(7,6); //R1 :2,3 R2: 7,6
-	public DoubleSolenoid flapper = new DoubleSolenoid(2,3); //R1: 7,6 R2: 2,3
-	public DoubleSolenoid pancake = new DoubleSolenoid(4,5);
+	public DoubleSolenoid flapper = new DoubleSolenoid(2,3); //R1: 6,7 R2: 2,3
+	public DoubleSolenoid pancake = new DoubleSolenoid(4,5); //TODO
 
 	// }
 
@@ -101,13 +101,13 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	public double SwitchI= .6f;
 	public double SwitchD = 6.0f;
 	public float SwitchF = 0f;
-	public float SwitchTarget = 0.62f; //.62  //0.89 //TODO
+	public float SwitchTarget = 0.62f; //.62  //0.85 //TODO
 
 	public double ScaleP = 0.0f;
 	public double ScaleI= 0.0f;
 	public double ScaleD = 0.0f;
-	public float ScaleF = 5f; //5 //TODO
-	public float ScaleTarget = 0.56f; //.56  //0.82 //TODO
+	public float ScaleF = 8f; //5 //TODO
+	public float ScaleTarget = 0.56f; //.56  //0.78 //TODO
 	public float HighTarget = .47f;
 
 	public float AutoP = 6.0f;
@@ -216,12 +216,12 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		Switch[1].RobotTurn(1.0f, 13f, 8f, 0.0f, 0.0f); //r,l
 		Switch[2].Wait(0.1f);
 		Switch[3].UltrasonicTarget(22f, 0.7f); //28
-		Switch[4].Push(2.0f, .3f);
-		Switch[5].Backup(0.4f, 1.5f);
-		Switch[6].Straighten(-0.4f, 41.0f, -45.0f); //l, r
-		Switch[7].ForwardPickup(0.4f, 1.4f, 2.0f);
-		Switch[8].Backup(0.4f, 1.30f);
-		Switch[9].StraightenInvert(0.6f, 6.0f, 0.0f); //l,r
+		Switch[4].Push(1.5f, .3f);
+		Switch[5].Backup(0.4f, 1.5f, 1.55f);
+		Switch[6].Straighten(-0.33f, 39.5f, -45f); //l, r
+		Switch[7].ForwardPickup(0.4f, 1.4f, 1.6f, 2.0f);
+		Switch[8].Backup(0.4f, 1.3f, 1.1f);
+		Switch[9].StraightenInvert(0.4f, 6.0f, 0.0f); //l,r
 		Switch[10].ArmGoHigh();
 		Switch[11].UltrasonicTarget(22f, 0.8f);
 		Switch[12].Push(5.0f, .3f);
@@ -231,29 +231,31 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		//Switch[5].Straighten(0.6f);
 		
 		//Shoot Switch  auto
-		Shoot = new AutoStep[5];
+		Shoot = new AutoStep[6];
 		for (int i = 0; i < Shoot.length; i++) {
 			Shoot[i] =  new AutoStep(drivetrain, navx, frontUltrasonic,  this);
 		}
 		
 		Shoot[0].NavxReset(0.0f + delay);
 		Shoot[0].InitStep();
-		Shoot[1].RobotTurn(1.0f, 13f, 8f, 1.0f, 1.0f);
-		Shoot[2].ShootSwitch(1.0f, 1.0f, 1.0f);
+		Shoot[1].RobotTurn(1.0f, 11f, 8f, 1.0f, 1.0f);
+		Shoot[2].Scoot(0.5f, .3f);
+		Shoot[3].ShootSwitch(1.0f, 1.0f, 1.0f);
+		Shoot[4].ArmGoHigh();
 		//TODO find the correct degrees for right side rotate
-		Shoot[3].Rotate(0.0f, 10.0f, 0.25f, -1);
+		Shoot[5].Straighten(0.3f, 0.0f, 0.0f);;
 		//TODO test step 4
-		Shoot[4].ForwardPickup(0.25f, 1.5f, 0.25f);
+		//Shoot[5].ForwardPickup(0.25f, 1.5f, 1.5f, 0.25f);
 		
 		if(crossLine == "Cross Line"){
-			System.out.println("Cross");
+			//System.out.println("Cross");
 			AutonomousUsing = Cross;
 		}else if (crossLine == "Normal Switch"){
 			AutonomousUsing = Switch;
 		}else if (crossLine == "Shoot Switch"){
 			AutonomousUsing = Shoot;
 		}else{
-			System.out.println("ERROR: Auto select misspelled; Defaulting to Shoot Switch");
+			//System.out.println("ERROR: Auto select misspelled; Defaulting to Shoot Switch");
 			AutonomousUsing = Switch;
 		} //TODO fix auto select
 
@@ -262,7 +264,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 	public void autonomousPeriodic() {
 
-		LogInfo("Switch[" + currentStep + "] ---------------- ");
+		//LogInfo("Switch[" + currentStep + "] ---------------- ");
 
 		if (currentStep < AutonomousUsing.length) {
 			AutonomousUsing[currentStep].Update();
@@ -329,7 +331,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		//ramps.set(DoubleSolenoid.Value.kForward);
 		//}
 
-		LogInfo("" + armTarget);
+		//LogInfo("" + armTarget);
 
 		if(pancake.get() == DoubleSolenoid.Value.kForward){
 			pancakeOut = true;
@@ -423,7 +425,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 		} else if ((operator.getPOV() > 270 || operator.getPOV() < 90) && operator.getPOV() != -1) {
 			// scale shooting
-			LogInfo("High Scale Shot");
+			//LogInfo("High Scale Shot");
 
 			if (Timer.get() >= 1.4f) {
 				flapper.set(DoubleSolenoid.Value.kReverse);
@@ -442,7 +444,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 		}else if(operator.getPOV() > 90 && operator.getPOV() < 270){
 			//low scale shooting
-			LogInfo("Low Shot");
+			//LogInfo("Low Shot");
 			if (Timer.get() >= 1.4f) {
 				flapper.set(DoubleSolenoid.Value.kReverse);
 				pancake.set(DoubleSolenoid.Value.kReverse);
@@ -454,7 +456,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 				pancakeTimer.reset();
 			}
 			if (Timer.get() >= .25) {
-				lowScale(.80f);
+				shoot(0.8f);
 				intakeMoving = true;
 			}
 		} else if (operator.getRawButton(2)) {
@@ -476,7 +478,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		}
 
 		//LogInfo("POV: " + operator.getPOV());
-		LogInfo("CAKE - " + pancake.get());
+		//LogInfo("CAKE - " + pancake.get());
 		if (!intakeMoving) {
 			wheelOne.set(ControlMode.PercentOutput, 0);
 			wheelTwo.set(ControlMode.PercentOutput, 0);
@@ -492,7 +494,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 
 			if (armTarget == ArmTarget.Hold) {
-				LogInfo("Holding");
+				//LogInfo("Holding");
 
 				armController.setP(HoldP);
 				armController.setI(HoldI);
@@ -653,17 +655,17 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		armController.setD(ScaleD);
 		armController.setF(ScaleF);
 
-		if (pot.get() > 0.69f) { //.64
+		if (pot.get() > 0.60f) { //.64
 			doPidArmControl = false;
-			armOne.set(0.90);
-			armTwo.set(0.90);
+			armOne.set(0.80);
+			armTwo.set(0.80);
 			armController.disable();
 			SmartDashboard.putString("Scale power: ", "70% Power");
 			//TODO
 		} else {
 			doPidArmControl = false;
-			armOne.set(0.40);
-			armTwo.set(0.40);
+			armOne.set(0.30);
+			armTwo.set(0.30);
 			armController.disable();
 			SmartDashboard.putString("Scale power: ", "35% Power");
 		}

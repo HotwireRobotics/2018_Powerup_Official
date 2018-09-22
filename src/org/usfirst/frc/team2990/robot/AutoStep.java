@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj.Timer;
 
 public class AutoStep {
 	public enum StepType {
-		Rotate, RotateRight, Forward, UltrasonicTarget, AlignUltrasonicLeft, LeftTurnSide, NavxReset, Push, RightTurnSide, WallTrackLeft, WallTrackRight, ShootInSwitch, Backup, Straighten, StraightenInvert, TimedForward, RobotTurn, Wait, ForwardPickup, ShootSwitch, StraightenLeft, ArmGoHigh
+		Rotate, RotateRight, Forward, UltrasonicTarget, AlignUltrasonicLeft, LeftTurnSide, NavxReset, Push, RightTurnSide, WallTrackLeft, WallTrackRight, ShootInSwitch, Backup, Straighten, StraightenInvert, TimedForward, RobotTurn, Wait, ForwardPickup, ShootSwitch, StraightenLeft, ArmGoHigh, Scoot
 	}
 
 	public StepType type;
@@ -44,6 +44,7 @@ public class AutoStep {
 	public Timer shootTime;
 	public float timecap;
 	public float timecap2;
+	public float timecapR;
 	public Robot robot;
 	private float rotateTargetLeft;
 	private float rotateTargetRight;
@@ -127,9 +128,10 @@ public class AutoStep {
 
 		type = StepType.ShootInSwitch;
 	}
-	public void Backup(float sped, float time){
+	public void Backup(float sped, float time, float timeR){
 		this.speed = sped;
 		timecap = time;
+		timecapR= timeR;
 		type = StepType.Backup;
 	}
 	public void Straighten(float sped, float deg, float deg2){
@@ -163,9 +165,10 @@ public class AutoStep {
 		timecap = time;
 		type = StepType.Wait;
 	}
-	public void ForwardPickup(float sped, float time, float time2){
+	public void ForwardPickup(float sped, float time, float timeR, float time2){
 		timecap = time;
 		timecap2 = time2;
+		timecapR = timeR;
 		this.speed = sped;
 		type = StepType.ForwardPickup;
 	}
@@ -180,6 +183,11 @@ public class AutoStep {
 	}
 	public void ArmGoHigh(){
 		type = StepType.ArmGoHigh;
+	}
+	public void Scoot(float sped, float time){
+		timecap = time;
+		speed = sped;
+		type = StepType.Scoot;
 	}
 
 	public void Update() {
@@ -235,6 +243,9 @@ public class AutoStep {
 			robot.pancake.set(DoubleSolenoid.Value.kForward);
 			robot.wheelOne.set(ControlMode.PercentOutput, 0.0f);
 			robot.wheelTwo.set(ControlMode.PercentOutput, 0.0f);
+			if (DriverStation.getInstance().getGameSpecificMessage().charAt(0) == 'R'){
+				timecap = timecapR;
+			}
 			if (backtime.get() < timecap) {
 				drivetrain.DriveStraight(-speed, false);
 				robot.wheelOne.set(ControlMode.PercentOutput, 0.0);
@@ -274,8 +285,8 @@ public class AutoStep {
 				}
 			}else{
 				if( robot.navx.getYaw() < rotateTargetR){
-					drivetrain.SetLeftSpeed(-speed);
-					drivetrain.SetRightSpeed(-speed);
+					drivetrain.SetLeftSpeed(speed);
+					drivetrain.SetRightSpeed(speed);
 				}else{
 					isDone = true;
 					timer.reset();
@@ -321,7 +332,11 @@ public class AutoStep {
 			if(pushtime.get() < timecap){
 				robot.pancake.set(DoubleSolenoid.Value.kReverse);
 				drivetrain.SetRightSpeed(-speed);
-				drivetrain.SetLeftSpeed(speed);
+				if(DriverStation.getInstance().getGameSpecificMessage().charAt(0) == 'L'){
+					drivetrain.SetLeftSpeed(speed);	
+				}else{
+					drivetrain.SetLeftSpeed(speed + .3f);						
+				}
 				if(pushtime.get() >= 0.3f){
 					float wheelspeed = 0.5f;
 					robot.wheelOne.set(ControlMode.PercentOutput, -wheelspeed);
@@ -343,24 +358,32 @@ public class AutoStep {
 			robot.armController.reset();
 			robot.doPidArmControl = true;
 			LogInfo("In here");
+			if (DriverStation.getInstance().getGameSpecificMessage().charAt(0) == 'R') {
+				timecap = timecapR;
+			}
 			if(pickupTime.get() < timecap){
 
 				drivetrain.DriveStraight(speed, false);
 				robot.wheelOne.set(ControlMode.PercentOutput, speed);
 				robot.wheelTwo.set(ControlMode.PercentOutput, -speed);
+				takeTime.reset();
+				takeTime.start();
 				//robot.intake();
 			}else if(pickupTime.get() > timecap){
 				if(grabTime.get() > timecap2){
 					robot.flapper.set(DoubleSolenoid.Value.kReverse);
 					if(robot.rightSwitch.get() == true || robot.leftSwitch.get() == true){
 						isDone = true;
+						robot.pancake.set(DoubleSolenoid.Value.kForward);
 					}else{
 						robot.LogInfo("I'm Trying to pick up the second cube");
 						//	robot.wheelOne.set(-wheelspeed);
 						//	robot.wheelTwo.set(wheelspeed);
-						robot.wheelOne.set(ControlMode.PercentOutput, speed);
-						robot.wheelTwo.set(ControlMode.PercentOutput, -speed);
-						if(takeTime.get()%2 == 1){
+						if (takeTime.get() < 1) {
+							robot.wheelOne.set(ControlMode.PercentOutput, .7);
+							robot.wheelTwo.set(ControlMode.PercentOutput, -.7);
+						}
+						if((takeTime.get() > 0.25 && takeTime.get() < 0.35) || (takeTime.get() > 0.45 && takeTime.get() < 0.55)){
 							robot.flapper.set(DoubleSolenoid.Value.kForward);
 						}else{
 							robot.flapper.set(DoubleSolenoid.Value.kReverse);
@@ -409,6 +432,7 @@ public class AutoStep {
 					}
 				}else{
 					robot.armController.reset();
+					shootTime.reset();
 					shootTime.start();
 					isDone= true;	
 				}
@@ -422,13 +446,14 @@ public class AutoStep {
 				}else{
 					isDone= true;
 					robot.armController.reset();
+					shootTime.reset();
 					shootTime.start();
 				}
 				robot.shoot(wheelShootSpeedRight);
 			}
 		}
 		if(type == StepType.ShootSwitch){
-			if (shootTime.get() < timecap){
+			if (shootTime.get() > timecap){
 				robot.flapper.set(DoubleSolenoid.Value.kReverse);
 				robot.pancake.set(DoubleSolenoid.Value.kReverse);
 				if(DriverStation.getInstance().getGameSpecificMessage().charAt(0) == 'L'){
@@ -436,16 +461,29 @@ public class AutoStep {
 				} else {
 					robot.shoot(speedR);
 				}
-			} else if (shootTime.get() > timecap){
-				robot.ArmGoHigh();
-			} else if (shootTime.get() > timecap + 0.1f){
-				isDone= true;
+			} else if (shootTime.get() < timecap){
+				if(DriverStation.getInstance().getGameSpecificMessage().charAt(0) == 'L'){
+					robot.shoot(speedL);
+				} else {
+					robot.shoot(speedR);
+				}
+			} 
+			if (shootTime.get() > (timecap + 1.0f)) {
+				isDone = true;
 			}
 		}
 		if (type == StepType.ArmGoHigh){
 			if (robot.pot.get() > 0.63){
 				robot.ArmDoScale();
 			} else {
+				isDone = true;
+			}
+		}
+		if (type == StepType.Scoot) {
+			robot.shoot(1.0f);
+			if (shootTime.get() < timecap){
+				drivetrain.DriveStraight(speed, false);
+			}else{
 				isDone = true;
 			}
 		}
@@ -462,6 +500,7 @@ public class AutoStep {
 		pickupTime.start();
 		grabTime.start();
 		takeTime.start();
+		shootTime.start();
 	}
 
 	public void LogInfo(String info) {
