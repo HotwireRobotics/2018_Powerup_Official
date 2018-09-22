@@ -179,15 +179,23 @@ public class AutoStep {
 		drivetrain.SetRightSpeed(0.0f);
 		double adjustment = Math.pow(35.0f, speed);
 		if (type == StepType.Rotate) {
-			if (DriverStation.getInstance().getGameSpecificMessage().charAt(0) == 'R'){
-				rotateTarget = rotateTargetR;
+			if(DriverStation.getInstance().getGameSpecificMessage().charAt(0) == 'R'){
+				left=-left;
 			}
-			if (navx.getYaw() < rotateTarget - adjustment) {
-				drivetrain.SetLeftSpeed(left * speed);
-				drivetrain.SetRightSpeed(left * speed);
-
-			} else {
-				isDone = true;
+			if (left == -1){
+				if (navx.getYaw() < rotateTarget) {
+					drivetrain.SetLeftSpeed(speed);
+					drivetrain.SetRightSpeed(speed);
+				} else {
+					isDone = true;
+				}
+			}else{
+				if (navx.getYaw() > rotateTarget) {
+					drivetrain.SetLeftSpeed(-speed);
+					drivetrain.SetRightSpeed(-speed);
+				} else {
+					isDone = true;
+				}
 			}
 		}
 		if (type == StepType.RotateRight) { //TODO remove RotateRight
@@ -305,9 +313,9 @@ public class AutoStep {
 			robot.pancake.set(DoubleSolenoid.Value.kReverse);
 			//robot.armTarget = ArmTarget.None;
 			robot.flapper.set(DoubleSolenoid.Value.kForward);
-			//float wheelspeed = 0.5f;
-			//robot.wheelOne.set(-wheelspeed);
-			//robot.wheelTwo.set(wheelspeed);
+			//float wheelspeed = 0.4f;
+			//robot.wheelOne.set(null, 0.0);
+			//robot.wheelTwo.set(null, 0.0);
 			robot.armController.disable();
 			robot.armController.reset();
 			robot.doPidArmControl = true;
@@ -322,13 +330,11 @@ public class AutoStep {
 					if(robot.rightSwitch.get() == true && robot.leftSwitch.get() == true){
 						isDone = true;
 					}else{
-					//	robot.wheelOne.set(-wheelspeed);
-					//	robot.wheelTwo.set(wheelspeed);
-						if(takeTime.get() > 1.5f){
+						if(takeTime.get() > 1.5f && takeTime.get() < 2.0f){
 							robot.flapper.set(DoubleSolenoid.Value.kForward);
-							if(takeTime.get() > 2.0f){
-								robot.flapper.set(DoubleSolenoid.Value.kReverse);
-							}
+						}
+						if(takeTime.get() > 2.0f){
+							robot.flapper.set(DoubleSolenoid.Value.kReverse);
 						}
 					}
 
@@ -393,6 +399,7 @@ public class AutoStep {
 			}
 		}
 		if(type == StepType.ShootSwitch){
+			LogInfo("Shoot Time: " + shootTime.get());
 			if (shootTime.get() < timecap){
 				robot.flapper.set(DoubleSolenoid.Value.kReverse);
 				robot.pancake.set(DoubleSolenoid.Value.kReverse);
@@ -401,9 +408,11 @@ public class AutoStep {
 				} else {
 					robot.shoot(speedR);
 				}
-			} else if (shootTime.get() > timecap){
+			} 
+			if(shootTime.get() > timecap){
 				robot.ArmGoHigh();
-			} else if (shootTime.get() > timecap + 0.1f){
+			}
+			if(shootTime.get() > timecap && robot.pot.get() < 0.56){
 				isDone= true;
 			}
 		}
@@ -420,6 +429,7 @@ public class AutoStep {
 		pickupTime.start();
 		grabTime.start();
 		takeTime.start();
+		shootTime.start();
 	}
 
 	public void LogInfo(String info) {

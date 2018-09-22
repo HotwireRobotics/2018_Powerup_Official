@@ -147,6 +147,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	public String crossLine = "Normal Switch";
 	public boolean cubeHold;
 
+	public double testCounter;
+	
 	public void robotInit() {
 
 		pitch = navx.getPitch() * 1000;
@@ -234,12 +236,12 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		
 		Shoot[0].NavxReset(0.0f + delay);
 		Shoot[0].InitStep();
-		Shoot[1].RobotTurn(1.0f, 13f, 8f, 1.0f, 1.0f);
+		Shoot[1].RobotTurn(1.0f, 13f, 8f, 1.0f, 0.25f);
 		Shoot[2].ShootSwitch(1.0f, 1.0f, 1.0f);
 		//TODO find the correct degrees for right side rotate
-		Shoot[3].Rotate(0.0f, 10.0f, 0.25f, -1);
+		Shoot[3].Rotate(12.0f, 10.0f, 0.5f, -1);
 		//TODO test step 4
-		Shoot[4].ForwardPickup(0.25f, 1.5f, 0.25f);
+		Shoot[4].ForwardPickup(0.25f, 1.7f, 0.25f);
 		
 		if(crossLine == "Cross Line"){
 			System.out.println("Cross");
@@ -276,9 +278,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	}
 
 	public void teleopInit() {
-		
-		SmartDashboard.putNumber("TestNumber", 1234);
-		
+	
+		testCounter = 1;
 		
 		//DriveTrain.Speed = 0;
 		armMove = false;
@@ -317,6 +318,9 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	}
 
 	public void teleopPeriodic() {
+		
+		SmartDashboard.putNumber("navx_yaw", navx.getYaw());
+		
 		//SmartDashboard.putNumber("Intake Ultrasonic", intakeUltrasonic.getRangeInches());
 		//SmartDashboard.getNumber("Intake Ultrasonic", intakeUltrasonic.getRangeInches());
 		//if(xbox360Controller.getRawButton(1)){
@@ -439,6 +443,9 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		}else if(operator.getPOV() > 90 && operator.getPOV() < 270){
 			//low scale shooting
 			LogInfo("Low Shot");
+			if (Timer.get() >= 1.3f){
+				pancake.set(DoubleSolenoid.Value.kReverse);
+			}
 			if (Timer.get() >= 1.4f) {
 				flapper.set(DoubleSolenoid.Value.kReverse);
 				pancake.set(DoubleSolenoid.Value.kReverse);
@@ -641,7 +648,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		armController.setD(ScaleD);
 		armController.setF(ScaleF);
 
-		if (pot.get() > 0.69f) { //.64
+		if (pot.get() > 0.64f) { //.64
 			doPidArmControl = false;
 			armOne.set(0.90);
 			armTwo.set(0.90);
