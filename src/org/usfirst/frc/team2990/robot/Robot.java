@@ -231,12 +231,16 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		Switch[4].Push(2.0f, .3f);
 		Switch[5].Backup(0.4f, 1.5f);
 		Switch[6].Straighten(-0.4f, 41.0f, -21.0f); //l, r
-		Switch[7].ForwardPickup(0.4f, 1.4f, 2.0f);
-		Switch[8].Backup(0.4f, 1.30f);
-		Switch[9].StraightenInvert(0.6f, 6.0f, 0.0f); //l,r
-		Switch[10].ArmGoHigh();
-		Switch[11].UltrasonicTarget(22f, 0.8f);
-		Switch[12].Push(5.0f, .3f);
+		
+		// These are for second cube auto
+		//Switch[7].ForwardPickup(0.4f, 1.4f, 2.0f);
+		//Switch[8].Backup(0.4f, 1.30f);
+		//Switch[9].StraightenInvert(0.6f, 6.0f, 0.0f); //l,r
+		//Switch[10].ArmGoHigh();
+		//Switch[11].UltrasonicTarget(22f, 0.8f);
+		//Switch[12].Push(5.0f, .3f);
+		// -----------
+
 		
 		//Switch[6].Wait(0.2f);
 		//Switch[7].Straighten(0.4f, 30);
@@ -458,7 +462,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 		}else if(operator.getPOV() > 90 && operator.getPOV() < 270){
 			//low scale shooting
-			LogInfo("Low Shot");
+			LogInfo("High Scale Shot");
+
 			if (Timer.get() >= 1.4f) {
 				flapper.set(DoubleSolenoid.Value.kReverse);
 				pancake.set(DoubleSolenoid.Value.kReverse);
@@ -470,7 +475,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 				pancakeTimer.reset();
 			}
 			if (Timer.get() >= .25) {
-				lowScale(.80f);
+				shoot(0.8f);
 				intakeMoving = true;
 			}
 		} else if (operator.getRawButton(2)) {
@@ -669,7 +674,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		armController.setD(ScaleD);
 		armController.setF(ScaleF);
 
-		if (pot.get() > 0.69f) { //.64
+		if (pot.get() > 0.61f) { //.64
 			doPidArmControl = false;
 			armOne.set(0.90);
 			armTwo.set(0.90);
