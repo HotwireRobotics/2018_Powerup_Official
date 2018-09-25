@@ -20,7 +20,9 @@ import javax.sound.midi.ControllerEventListener;
 
 import org.usfirst.frc.team2990.robot.DriveTrain;
 
+import edu.wpi.cscore.MjpegServer;
 import edu.wpi.cscore.UsbCamera;
+import edu.wpi.cscore.VideoSink;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
@@ -149,6 +151,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 	public void robotInit() {
 
+		SmartDashboard.putString("autoChoice", "N");
+		
 		pitch = navx.getPitch() * 1000;
 
 		armController = new PIDController(6.5f, 0.3, 7.0, 0, pot, this);
@@ -168,9 +172,13 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		// Camera
 		{
 			camera = CameraServer.getInstance();
+			
 			UsbCamera usbCam = camera.startAutomaticCapture();
 			usbCam.setResolution(250, 210);
 			usbCam.setFPS(30);
+			
+			MjpegServer s = CameraServer.getInstance().addServer("DashStream");
+			s.setSource(usbCam);
 		}
 		largestZ = 0;
 	}
@@ -190,6 +198,10 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 		delay = (float) SmartDashboard.getNumber("Auto Delay", delay);
 		crossLine = SmartDashboard.getString("Cross Line; Normal Switch; Shoot Switch", crossLine);
+		
+		System.out.println("Auto Delay " + delay);
+		System.out.println("Auto Choice " + crossLine);
+		
 
 
 		drivetrain.SetBreak();
@@ -277,7 +289,6 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 	public void teleopInit() {
 		
-		SmartDashboard.putNumber("TestNumber", 1234);
 		
 		
 		//DriveTrain.Speed = 0;
@@ -317,6 +328,11 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	}
 
 	public void teleopPeriodic() {
+		
+		
+		//SmartDashboard.putString("this!", 1234);
+		
+		
 		//SmartDashboard.putNumber("Intake Ultrasonic", intakeUltrasonic.getRangeInches());
 		//SmartDashboard.getNumber("Intake Ultrasonic", intakeUltrasonic.getRangeInches());
 		//if(xbox360Controller.getRawButton(1)){
