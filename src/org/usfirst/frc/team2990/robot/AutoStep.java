@@ -253,7 +253,9 @@ public class AutoStep {
 					isDone = true;
 				}
 			}else{
+				System.out.println("RIGHT SIDE");
 				if( robot.navx.getYaw() > rotateTargetR){
+					System.out.println("RIGHT TURN");
 					drivetrain.SetLeftSpeed(speed);
 					drivetrain.SetRightSpeed(speed);
 				}else{
@@ -274,8 +276,8 @@ public class AutoStep {
 				}
 			}else{
 				if( robot.navx.getYaw() < rotateTargetR){
-					drivetrain.SetLeftSpeed(-speed);
-					drivetrain.SetRightSpeed(-speed);
+					drivetrain.SetLeftSpeed(speed);
+					drivetrain.SetRightSpeed(speed);
 				}else{
 					isDone = true;
 					timer.reset();
@@ -333,7 +335,7 @@ public class AutoStep {
 			}
 		}
 		if(type == StepType.ForwardPickup){
-			robot.pancake.set(DoubleSolenoid.Value.kReverse);
+			//robot.pancake.set(DoubleSolenoid.Value.kReverse);
 			//robot.armTarget = ArmTarget.None;
 			robot.flapper.set(DoubleSolenoid.Value.kForward);
 			//float wheelspeed = 0.5f;
@@ -343,16 +345,18 @@ public class AutoStep {
 			robot.armController.reset();
 			robot.doPidArmControl = true;
 			LogInfo("In here");
+			robot.intake();
 			if(pickupTime.get() < timecap){
 
 				drivetrain.DriveStraight(speed, false);
-				robot.wheelOne.set(ControlMode.PercentOutput, speed);
-				robot.wheelTwo.set(ControlMode.PercentOutput, -speed);
+				//robot.wheelOne.set(ControlMode.PercentOutput, speed);
+				//robot.wheelTwo.set(ControlMode.PercentOutput, -speed);
 				//robot.intake();
 			}else if(pickupTime.get() > timecap){
 				if(grabTime.get() > timecap2){
 					robot.flapper.set(DoubleSolenoid.Value.kReverse);
 					if(robot.rightSwitch.get() == true || robot.leftSwitch.get() == true){
+						robot.pancake.set(DoubleSolenoid.Value.kForward);
 						isDone = true;
 					}else{
 						robot.LogInfo("I'm Trying to pick up the second cube");

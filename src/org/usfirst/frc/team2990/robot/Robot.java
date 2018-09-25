@@ -218,7 +218,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		Switch[3].UltrasonicTarget(22f, 0.7f); //28
 		Switch[4].Push(2.0f, .3f);
 		Switch[5].Backup(0.4f, 1.5f);
-		Switch[6].Straighten(-0.4f, 41.0f, -45.0f); //l, r
+		Switch[6].Straighten(-0.4f, 41.0f, -21.0f); //l, r
 		Switch[7].ForwardPickup(0.4f, 1.4f, 2.0f);
 		Switch[8].Backup(0.4f, 1.30f);
 		Switch[9].StraightenInvert(0.6f, 6.0f, 0.0f); //l,r
