@@ -15,6 +15,9 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 
 import javax.sound.midi.ControllerEventListener;
 
@@ -337,9 +340,25 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 	public void teleopPeriodic() {
 		
+		NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
+		NetworkTableEntry tx = table.getEntry("tx");
+		NetworkTableEntry ty = table.getEntry("ty");
+		NetworkTableEntry ta = table.getEntry("ta");
+		double x = tx.getDouble(0);
+		double y = ty.getDouble(0);
+		double area = ta.getDouble(0);
+
+		//System.out.println("Xvalue  " + x);
+		//System.out.println("Yvalue  " + y);
+		System.out.println("Avalue  " + area);
 		
 		//SmartDashboard.putString("this!", 1234);
 		
+		if (xbox360Controller.getRawButton(1)) {
+			NetworkTableInstance.getDefault().getTable("limelight").getEntry("ledMode").setNumber(1);
+		} else {
+			NetworkTableInstance.getDefault().getTable("limelight").getEntry("ledMode").setNumber(0);
+		}
 		
 		//SmartDashboard.putNumber("Intake Ultrasonic", intakeUltrasonic.getRangeInches());
 		//SmartDashboard.getNumber("Intake Ultrasonic", intakeUltrasonic.getRangeInches());
@@ -349,7 +368,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		//ramps.set(DoubleSolenoid.Value.kForward);
 		//}
 
-		LogInfo("" + armTarget);
+		//LogInfo("" + armTarget);
 
 		if(pancake.get() == DoubleSolenoid.Value.kForward){
 			pancakeOut = true;
@@ -497,7 +516,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		}
 
 		//LogInfo("POV: " + operator.getPOV());
-		LogInfo("CAKE - " + pancake.get());
+		//LogInfo("CAKE - " + pancake.get());
 		if (!intakeMoving) {
 			wheelOne.set(ControlMode.PercentOutput, 0);
 			wheelTwo.set(ControlMode.PercentOutput, 0);
