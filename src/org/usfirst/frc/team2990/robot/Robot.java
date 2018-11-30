@@ -360,6 +360,22 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			NetworkTableInstance.getDefault().getTable("limelight").getEntry("ledMode").setNumber(0);
 		}
 		
+		if (xbox360Controller.getRawButton(2)) {
+			
+			if (x == 0){
+				drivetrain.SetRightSpeed(0.6f);
+				drivetrain.SetLeftSpeed(0.6f);	
+			}else {
+				if (area < 0.5f){
+					drivetrain.SetRightSpeed(0.25f);
+					drivetrain.SetLeftSpeed(-0.25f);	
+				}
+			}
+			
+		} else {
+			drivetrain.SetRightSpeed(0);
+			drivetrain.SetLeftSpeed(0);
+		}
 		//SmartDashboard.putNumber("Intake Ultrasonic", intakeUltrasonic.getRangeInches());
 		//SmartDashboard.getNumber("Intake Ultrasonic", intakeUltrasonic.getRangeInches());
 		//if(xbox360Controller.getRawButton(1)){
@@ -385,7 +401,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		if (xbox360Controller.getRawButton(8)) {
 			largestZ = 0;
 		}
-		ControllerDrive();
+		//ControllerDrive();
 
 		SmartDashboard.putNumber("Front Ultrasonic: ", frontUltrasonic.getRangeInches());
 		//	SmartDashboard.putNumber("Left Side Ultrasonic: ", leftsideultrasonic.getRangeInches());
