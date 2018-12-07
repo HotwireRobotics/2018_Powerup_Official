@@ -155,7 +155,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	public void robotInit() {
 
 		SmartDashboard.putString("autoChoice", "N");
-		
+
 		pitch = navx.getPitch() * 1000;
 
 		armController = new PIDController(6.5f, 0.3, 7.0, 0, pot, this);
@@ -175,11 +175,11 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		// Camera
 		{
 			camera = CameraServer.getInstance();
-			
+
 			UsbCamera usbCam = camera.startAutomaticCapture();
 			usbCam.setResolution(250, 210);
 			usbCam.setFPS(30);
-			
+
 			MjpegServer s = CameraServer.getInstance().addServer("DashStream");
 			s.setSource(usbCam);
 		}
@@ -201,10 +201,10 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 		delay = (float) SmartDashboard.getNumber("Auto Delay", delay);
 		crossLine = SmartDashboard.getString("Cross Line; Normal Switch; Shoot Switch", crossLine);
-		
+
 		System.out.println("Auto Delay " + delay);
 		System.out.println("Auto Choice " + crossLine);
-		
+
 
 
 		drivetrain.SetBreak();
@@ -234,7 +234,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		Switch[4].Push(2.0f, .3f);
 		Switch[5].Backup(0.4f, 1.5f);
 		Switch[6].Straighten(-0.4f, 41.0f, -21.0f); //l, r
-		
+
 		// These are for second cube auto
 		//Switch[7].ForwardPickup(0.4f, 1.4f, 2.0f);
 		//Switch[8].Backup(0.4f, 1.30f);
@@ -244,17 +244,17 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		//Switch[12].Push(5.0f, .3f);
 		// -----------
 
-		
+
 		//Switch[6].Wait(0.2f);
 		//Switch[7].Straighten(0.4f, 30);
 		//Switch[5].Straighten(0.6f);
-		
+
 		//Shoot Switch  auto
 		Shoot = new AutoStep[5];
 		for (int i = 0; i < Shoot.length; i++) {
 			Shoot[i] =  new AutoStep(drivetrain, navx, frontUltrasonic,  this);
 		}
-		
+
 		Shoot[0].NavxReset(0.0f + delay);
 		Shoot[0].InitStep();
 		Shoot[1].RobotTurn(1.0f, 13f, 8f, 1.0f, 1.0f);
@@ -263,7 +263,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		Shoot[3].Rotate(0.0f, 10.0f, 0.25f, -1);
 		//TODO test step 4
 		Shoot[4].ForwardPickup(0.25f, 1.5f, 0.25f);
-		
+
 		if(crossLine == "Cross Line"){
 			System.out.println("Cross");
 			AutonomousUsing = Cross;
@@ -293,15 +293,15 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			}
 		}
 
-		
+
 
 		UpdateMotors();
 	}
 
 	public void teleopInit() {
-		
-		
-		
+
+
+
 		//DriveTrain.Speed = 0;
 		armMove = false;
 		armController.disable();
@@ -334,44 +334,61 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		SmartDashboard.putNumber("Switch P", SwitchP);
 		SmartDashboard.putNumber("Switch I", SwitchI);
 		SmartDashboard.putNumber("Switch D", SwitchD);
-		
+
 		flapper.set(DoubleSolenoid.Value.kReverse);
 	}
 
 	public void teleopPeriodic() {
-		
+
 		NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
-		NetworkTableEntry tx = table.getEntry("tx");
-		NetworkTableEntry ty = table.getEntry("ty");
-		NetworkTableEntry ta = table.getEntry("ta");
-		double x = tx.getDouble(0);
-		double y = ty.getDouble(0);
-		double area = ta.getDouble(0);
+		NetworkTableEntry tableX = table.getEntry("tx");
+		NetworkTableEntry tableY = table.getEntry("ty");
+		NetworkTableEntry tableA = table.getEntry("ta");
+		NetworkTableEntry tableL = table.getEntry("tl");
+		NetworkTableEntry tableS = table.getEntry("ts");
+		NetworkTableEntry tableV = table.getEntry("tv");
+		double tx = tableX.getDouble(0);
+		double ty = tableY.getDouble(0);
+		double ta = tableA.getDouble(0);
+		double tl = tableL.getDouble(0);
+		double ts = tableS.getDouble(0);
+		double tv = tableV.getDouble(0);
+		float txTarget = 1f;
+		float txSpeed = 0.5f;
+		float taTarget = 1.5f;
+		float taSpeed = 0.5f;
 
 		//System.out.println("Xvalue  " + x);
 		//System.out.println("Yvalue  " + y);
-		System.out.println("Avalue  " + area);
-		
+		System.out.println("Avalue  " + ta);
+
 		//SmartDashboard.putString("this!", 1234);
-		
+
 		if (xbox360Controller.getRawButton(1)) {
 			NetworkTableInstance.getDefault().getTable("limelight").getEntry("ledMode").setNumber(1);
 		} else {
 			NetworkTableInstance.getDefault().getTable("limelight").getEntry("ledMode").setNumber(0);
 		}
-		
+
 		if (xbox360Controller.getRawButton(2)) {
-			
-			if (x == 0){
-				drivetrain.SetRightSpeed(0.6f);
-				drivetrain.SetLeftSpeed(0.6f);	
-			}else {
-				if (area < 0.5f){
-					drivetrain.SetRightSpeed(0.25f);
-					drivetrain.SetLeftSpeed(-0.25f);	
-				}
+
+			if (tv == 0){
+				drivetrain.SetRightSpeed(1f);
+				drivetrain.SetLeftSpeed(1f);	
+			} else if(tx>1.25){
+				drivetrain.SetRightSpeed((float) (tx*tx));
+				drivetrain.SetLeftSpeed((float) (tx*tx));
+			} else if(tx<-1.25){
+				drivetrain.SetRightSpeed((float) (-1*(tx*tx)));
+				drivetrain.SetLeftSpeed((float) (-1*(tx*tx)));
+			}else if (tx>=-1.25 && tx<=1.25){
+				drivetrain.SetRightSpeed((float) ((taTarget-ta)*taSpeed));
+				drivetrain.SetLeftSpeed((float) (-1*((taTarget-ta)*taSpeed)));
+			}else{
+				drivetrain.SetRightSpeed(0);
+				drivetrain.SetLeftSpeed(0);
 			}
-			
+
 		} else {
 			drivetrain.SetRightSpeed(0);
 			drivetrain.SetLeftSpeed(0);
@@ -566,7 +583,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 				armController.disable();
 				armController.reset();
 				doPidArmControl = true;
-				
+
 				if(pot.get() < .69f){ //.69
 					armOne.set(0);
 					armTwo.set(0);	
@@ -643,12 +660,12 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		SmartDashboard.putNumber("Left Ultrasonic: ", lultrasonic.getRangeInches());
 		SmartDashboard.putNumber("Right Ultrasonic: ", rultrasonic.getRangeInches());
 		SmartDashboard.putNumber("Pot: ", pot.get());
-		
+
 		 */
 		//LogInfo("Pot Value" + potTarget);
 
 		SmartDashboard.getNumber("Yaw", navx.getYaw());
-		
+
 		if (debug.getRawButton(5)) {
 			//intake();
 		} else {
@@ -664,7 +681,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			pancake.set(DoubleSolenoid.Value.kReverse);
 			//flapper.set(DoubleSolenoid.Value.kReverse);
 		}
-		
+
 		if (debug.getRawButton(4)) {
 			//pancake.set(DoubleSolenoid.Value.kForward);
 			flapper.set(DoubleSolenoid.Value.kForward);
