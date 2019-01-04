@@ -355,7 +355,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		double tv = tableV.getDouble(0);
 		float txTarget = 1f;
 		float txSpeed = 0.5f;
-		float taTarget = 1.5f;
+		float taTarget = 1;
 		float taSpeed = 0.5f;
 
 		//System.out.println("Xvalue  " + x);
@@ -364,35 +364,35 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 		//SmartDashboard.putString("this!", 1234);
 
-		if (xbox360Controller.getRawButton(1)) {
-			NetworkTableInstance.getDefault().getTable("limelight").getEntry("ledMode").setNumber(1);
-		} else {
-			NetworkTableInstance.getDefault().getTable("limelight").getEntry("ledMode").setNumber(0);
-		}
+		//if (xbox360Controller.getRawButton(1)) {
+		//	NetworkTableInstance.getDefault().getTable("limelight").getEntry("ledMode").setNumber(1);
+		//} else {
+		//	NetworkTableInstance.getDefault().getTable("limelight").getEntry("ledMode").setNumber(0);
+		//}
 
-		if (xbox360Controller.getRawButton(2)) {
+		//if (xbox360Controller.getRawButton(2)) {
 
-			if (tv == 0){
-				drivetrain.SetRightSpeed(1f);
-				drivetrain.SetLeftSpeed(1f);	
-			} else if(tx>1.25){
-				drivetrain.SetRightSpeed((float) (tx*tx));
-				drivetrain.SetLeftSpeed((float) (tx*tx));
-			} else if(tx<-1.25){
-				drivetrain.SetRightSpeed((float) (-1*(tx*tx)));
-				drivetrain.SetLeftSpeed((float) (-1*(tx*tx)));
-			}else if (tx>=-1.25 && tx<=1.25){
-				drivetrain.SetRightSpeed((float) ((taTarget-ta)*taSpeed));
-				drivetrain.SetLeftSpeed((float) (-1*((taTarget-ta)*taSpeed)));
-			}else{
-				drivetrain.SetRightSpeed(0);
-				drivetrain.SetLeftSpeed(0);
-			}
+//			if (tv == 0){
+	//			drivetrain.SetRightSpeed(1f);
+	//			drivetrain.SetLeftSpeed(1f);	
+//			} else if(tx>1.5){
+//				drivetrain.SetRightSpeed(0.5f);
+//				drivetrain.SetLeftSpeed(0.5f);
+//			} else if(tx<-1.5){
+//				drivetrain.SetRightSpeed(-0.5f);
+//				drivetrain.SetLeftSpeed(-0.5f);
+//			}else if (tx>=-1.5 && tx<=1.5){
+//				drivetrain.SetRightSpeed((float) ((taTarget-ta)*taSpeed));
+//				drivetrain.SetLeftSpeed((float) (-1*((taTarget-ta)*taSpeed)));
+//			}else{
+//				drivetrain.SetRightSpeed(0);
+//				drivetrain.SetLeftSpeed(0);
+//			}
 
-		} else {
-			drivetrain.SetRightSpeed(0);
-			drivetrain.SetLeftSpeed(0);
-		}
+	//	} else {
+	//		drivetrain.SetRightSpeed(0);
+//			drivetrain.SetLeftSpeed(0);
+//		}
 		//SmartDashboard.putNumber("Intake Ultrasonic", intakeUltrasonic.getRangeInches());
 		//SmartDashboard.getNumber("Intake Ultrasonic", intakeUltrasonic.getRangeInches());
 		//if(xbox360Controller.getRawButton(1)){
@@ -418,7 +418,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		if (xbox360Controller.getRawButton(8)) {
 			largestZ = 0;
 		}
-		//ControllerDrive();
+		ControllerDrive();
 
 		SmartDashboard.putNumber("Front Ultrasonic: ", frontUltrasonic.getRangeInches());
 		//	SmartDashboard.putNumber("Left Side Ultrasonic: ", leftsideultrasonic.getRangeInches());
